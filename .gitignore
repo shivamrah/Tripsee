@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+/.env
+client/node_modules/
+server/node_modules/
+
+# Ignore local env files per-folder
+client/.env
+server/.env

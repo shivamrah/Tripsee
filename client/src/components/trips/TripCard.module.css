@@ -1,0 +1,131 @@
+.card {
+    background-color: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.12);
+}
+
+.cardImage {
+
+
+    height: 17rem;
+    object-fit: cover;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.card:hover .cardImage {
+    transform: scale(1.05);
+}
+
+.cardBody {
+    padding: 1.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.tripTitle {
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+}
+
+.tripDate {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.cityInfo {
+    color: #374151;
+    font-size: 0.95rem;
+    margin-top: 0.25rem;
+    line-height: 1.4;
+}
+
+.attractions {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0 0;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.attractionItem {
+    background: #eef2ff;
+    color: #3730a3;
+    padding: 0.35rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+}
+
+.priceSection {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #3b82f6;
+}
+
+.priceBadge {
+    display: inline-block;
+    background: #fff6f3;
+    color: #b91c1c;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.5rem;
+    font-weight: 700;
+    margin-left: 0.4rem;
+}
+
+.bookButton {
+    background: linear-gradient(90deg, #6366f1, #3b82f6);
+    color: #ffffff;
+    padding: 0.65rem 1.4rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.bookButton:hover {
+    background: linear-gradient(90deg, #4338ca, #2563eb);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 18px rgba(67, 56, 202, 0.4);
+}
+
+
+@media (max-width: 640px) {
+    .cardImage {
+        height: 12rem;
+    }
+
+    .tripTitle {
+        font-size: 1.25rem;
+    }
+
+    .price {
+        font-size: 1.25rem;
+    }
+}
