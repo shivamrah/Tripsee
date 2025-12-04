@@ -13,7 +13,7 @@ const TripDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
-  const { t } = useContext(LocaleContext);
+  const { t, locale, formatCurrency } = useContext(LocaleContext);
 
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -108,18 +108,18 @@ const TripDetailsPage = () => {
       return;
     }
     if (!selectedDate) {
-      toast.error("Please select a date for your trip.");
+      toast.error(t('pleaseSelectDate'));
       return;
     }
     if (!selectedFromLocal) {
-      toast.error("Please select a departure location.");
+      toast.error(t('pleaseSelectDeparture'));
       return;
     }
     // ensure date is not in the past
     const today = new Date();
     const chosen = new Date(selectedDate + "T00:00:00");
     if (chosen.setHours(0, 0, 0, 0) < new Date(today.setHours(0, 0, 0, 0))) {
-      toast.error("Please choose a valid future date.");
+      toast.error(t('pleaseChooseValidDate'));
       return;
     }
     // Pass the selected date in the trip object so checkout/confirmation show the chosen date
@@ -169,7 +169,7 @@ const TripDetailsPage = () => {
             </h1>
           </div>
 
-          <p className={styles.tripDate}>{new Date(trip.date).toLocaleDateString()}</p>
+          <p className={styles.tripDate}>{new Date(trip.date).toLocaleDateString(locale === 'en' ? 'en-IN' : `${locale}-IN`)}</p>
 
           {trip.attractions && trip.attractions.length > 0 && (
             <div className={styles.attractionsGrid}>
@@ -182,7 +182,7 @@ const TripDetailsPage = () => {
                   />
                   <div className={styles.attractionBody}>
                     <h3>{a.name}</h3>
-                    <p className={styles.priceBadge}>{new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(a.price + 5000)} {t('perPerson')}</p>
+                    <p className={styles.priceBadge}>{formatCurrency(a.price + 5000, { maximumFractionDigits: 0 })} {t('perPerson')}</p>
                   </div>
                 </div>
               ))}

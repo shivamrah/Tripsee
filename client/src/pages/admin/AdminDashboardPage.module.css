@@ -94,3 +94,32 @@ td {
     background-color: #fee2e2;
     color: #b91c1c;
 }
+
+.formRow {
+    display: flex;
+    flex-direction: column;
+    margin-top: 0.5rem;
+}
+
+.input {
+    padding: 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin-top: 6px;
+}
+
+.cancel {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #374151;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+}
+
+.proceed {
+    background: #3b82f6;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border: none;
+}

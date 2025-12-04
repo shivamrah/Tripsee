@@ -10,37 +10,7 @@ import { useNavigate } from "react-router-dom";
 import SeatSelector from "../components/trips/SeatSelector";
 import Modal from "../components/common/Modal";
 
-// Thumbnail component that falls back to initials box when image fails
-const Thumbnail = ({ src, title, className }) => {
-  const [failed, setFailed] = React.useState(false);
-  const initials = React.useMemo(() => {
-    if (!title) return "TR";
-    return title
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((w) => w[0])
-      .join("")
-      .toUpperCase();
-  }, [title]);
-
-  if (!src || failed) {
-    return (
-      <div className={`${styles.thumbSmallPlaceholder} ${className || ""}`}>
-        {initials}
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={src}
-      alt={title}
-      className={className}
-      onError={() => setFailed(true)}
-    />
-  );
-};
+import Thumbnail from "../components/common/Thumbnail";
 
 // Live clock component for card Time field
 const Clock = () => {
@@ -54,6 +24,7 @@ const Clock = () => {
 
 // Step component that allows searching any India place (via Nominatim) and shows results first
 const ChooseFromStep = ({ item, onGenerate, onCancel }) => {
+  const { formatCurrency, t } = useContext(LocaleContext);
   const [query, setQuery] = React.useState("");
   const [searchResults, setSearchResults] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
@@ -185,7 +156,7 @@ const ChooseFromStep = ({ item, onGenerate, onCancel }) => {
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontWeight: 600 }}>{r.from}</span>
-                      <span style={{ fontWeight: 700 }}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(r.fare)}</span>
+                      <span style={{ fontWeight: 700 }}>{formatCurrency(r.fare)}</span>
                     </div>
                   </button>
                 </li>
@@ -200,7 +171,7 @@ const ChooseFromStep = ({ item, onGenerate, onCancel }) => {
                     <button className={styles.fromBtn} onClick={() => onGenerate([fb, ...fallbackRef.current.filter((f) => f.from !== fb.from)])}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ fontWeight: 600 }}>{fb.from}</span>
-                        <span style={{ fontWeight: 700 }}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(fb.fare)}</span>
+                        <span style={{ fontWeight: 700 }}>{formatCurrency(fb.fare)}</span>
                       </div>
                     </button>
                   </li>
@@ -211,7 +182,7 @@ const ChooseFromStep = ({ item, onGenerate, onCancel }) => {
         </div>
 
         <div style={{ marginTop: 12 }}>
-          <button className={styles.smallBtn} onClick={onCancel}>Cancel</button>
+          <button className={styles.smallBtn} onClick={onCancel}>{t('cancel')}</button>
         </div>
       </div>
     </div>
@@ -223,7 +194,7 @@ const MyBookingsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const { user } = useContext(AuthContext);
-  const { t } = useContext(LocaleContext);
+  const { t, locale, formatCurrency } = useContext(LocaleContext);
   const navigate = useNavigate();
   const [savedTrips, setSavedTrips] = useState([]);
   const [bookingModal, setBookingModal] = useState({ open: false, item: null, idx: -1 });
@@ -252,11 +223,11 @@ const MyBookingsPage = () => {
     const fromLocation = b.fromLocation || tripInfo.source || 'N/A';
     const toLocation = tripInfo.destination || (tripInfo.attractions && tripInfo.attractions.length > 0 ? tripInfo.attractions[0].name : tripInfo.title) || 'N/A';
     const seats = b.seats ? b.seats.join(', ') : 'N/A';
-    const date = tripInfo.date ? new Date(tripInfo.date).toLocaleDateString() : (b.travelDate ? new Date(b.travelDate).toLocaleDateString() : 'N/A');
+    const date = tripInfo.date ? new Date(tripInfo.date).toLocaleDateString(locale === 'en' ? 'en-IN' : `${locale}-IN`) : (b.travelDate ? new Date(b.travelDate).toLocaleDateString(locale === 'en' ? 'en-IN' : `${locale}-IN`) : 'N/A');
     const time = tripInfo.time || (b && b.trip && b.trip.time) || new Date().toLocaleTimeString();
-    const total = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(b.totalAmount || 0);
+    const total = formatCurrency(b.totalAmount || 0);
     const perSeat = tripInfo.price || (b.totalAmount && b.seats && b.seats.length ? (b.totalAmount / b.seats.length) : null);
-    const perSeatStr = perSeat != null ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(perSeat) : '';
+    const perSeatStr = perSeat != null ? formatCurrency(perSeat) : '';
     const bookingDate = b.bookingDate ? new Date(b.bookingDate).toLocaleString() : '';
 
     return `
@@ -326,11 +297,11 @@ const MyBookingsPage = () => {
             idoc.document.close();
             idoc.focus();
             setTimeout(() => {
-              try { idoc.print(); } catch (e2) { alert('Print failed. Please copy or save the ticket manually.'); }
+              try { idoc.print(); } catch (e2) { alert(t('printFailedCopy')); }
               setTimeout(() => document.body.removeChild(iframe), 500);
             }, 250);
           } catch (e3) {
-            alert('Print failed. Please check your popup blocker or try copying the ticket content.');
+            alert(t('printFailedPopup'));
           }
         }
       }, 250);
@@ -358,12 +329,12 @@ const MyBookingsPage = () => {
         try {
           iwin.print();
         } catch (e) {
-          alert('Unable to print the ticket. Please check your popup blocker or try the Download (PDF) option.');
+          alert(t('unablePrint'));
         }
         setTimeout(() => { try { document.body.removeChild(iframe); } catch (e) { } }, 500);
       }, 300);
     } catch (err) {
-      alert('Unable to open print window. Please check your popup blocker.');
+      alert(t('unableOpenPrintWindow'));
     }
   };
 
@@ -384,7 +355,7 @@ const MyBookingsPage = () => {
     const fetchBookings = async () => {
       if (!user || !user.token) {
         setLoading(false);
-        setError("Please log in to view your bookings.");
+        setError(t('pleaseLogInToViewBookings'));
         return;
       }
       try {
@@ -457,7 +428,7 @@ const MyBookingsPage = () => {
 
   useEffect(() => {
     const onAuthLogout = () => {
-      setError("Please log in to view your bookings.");
+      setError(t('pleaseLogInToViewBookings'));
       setBookings([]);
     };
     window.addEventListener("authLogout", onAuthLogout);
@@ -493,7 +464,7 @@ const MyBookingsPage = () => {
     };
   }, [modalSearchQuery]);
 
-  if (loading) return <p className={styles.centeredMessage}>Loading your bookings...</p>;
+  if (loading) return <p className={styles.centeredMessage}>{t('loading')} {t('myBookings').toLowerCase()}...</p>;
 
   if (error) {
     const needsLogin = /please log in/i.test(error) || /not authorized/i.test(error) || /token failed/i.test(error);
@@ -560,6 +531,19 @@ const MyBookingsPage = () => {
                     Remove
                   </button>
                   <button
+                    className={styles.smallBtnHotel}
+                    onClick={() => {
+                      try {
+                        navigate('/hotels', { state: { trip: item } });
+                      } catch (e) {
+                        // fallback: open hotels page
+                        window.location.href = '/hotels';
+                      }
+                    }}
+                  >
+                    Book Hotel
+                  </button>
+                  <button
                     className={styles.smallBtnPrimary}
                     onClick={() => {
                       // Open modal to choose origin and generate fares for this saved trip
@@ -578,7 +562,7 @@ const MyBookingsPage = () => {
             ))}
           </div>
         ) : (
-          <p>You have no saved trips. Add trips to "My Trips" to see them here.</p>
+          <p>{t('noSavedTrips')}</p>
         )}
       </section>
 
@@ -596,7 +580,7 @@ const MyBookingsPage = () => {
             ))}
           </div>
         ) : (
-          <p>You have no upcoming trips.</p>
+          <p>{t('noUpcomingTrips')}</p>
         )}
       </section>
       {/* Saved-trip booking flow modal: choose origin -> select seats -> checkout */}
@@ -648,7 +632,7 @@ const MyBookingsPage = () => {
                             <input type="radio" name="fromCityModal" value={opt.from} checked={selectedFromIndex === i} onChange={() => setSelectedFromIndex(i)} />
                             <span className={bookStyles.cityName}>{opt.from}</span>
                           </label>
-                          <span className={bookStyles.cityPrice}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(opt.fare)}</span>
+                          <span className={bookStyles.cityPrice}>{formatCurrency(opt.fare)}</span>
                         </li>
                       ))}
                     </ul>
@@ -660,21 +644,21 @@ const MyBookingsPage = () => {
                       <input type="date" className={bookStyles.input} value={modalSelectedDate} onChange={(e) => setModalSelectedDate(e.target.value)} min={new Date().toISOString().slice(0, 10)} />
                     </div>
                     <div className={bookStyles.actionsArea}>
-                      <button className={bookStyles.cancel} onClick={() => { setBookingModal({ open: false, item: null, idx: -1 }); setModalFromOptions([]); setSelectedFromIndex(-1); setSelectedSeats([]); setModalSelectedDate(""); }}>Cancel</button>
+                      <button className={bookStyles.cancel} onClick={() => { setBookingModal({ open: false, item: null, idx: -1 }); setModalFromOptions([]); setSelectedFromIndex(-1); setSelectedSeats([]); setModalSelectedDate(""); }}>{t('cancel')}</button>
                       <button className={bookStyles.proceed} onClick={() => {
-                        if (selectedFromIndex < 0) { alert('Please select a departure location.'); return; }
-                        if (!modalSelectedDate) { alert('Please choose a travel date.'); return; }
+                        if (selectedFromIndex < 0) { alert(t('pleaseSelectDepartureModal')); return; }
+                        if (!modalSelectedDate) { alert(t('pleaseChooseTravelDate')); return; }
                         const chosen = modalFromOptions[selectedFromIndex];
                         const picked = new Date(modalSelectedDate);
                         const today = new Date(); today.setHours(0, 0, 0, 0);
-                        if (picked < today) { alert('Travel date cannot be in the past.'); return; }
+                        if (picked < today) { alert(t('travelDateCannotBePast')); return; }
                         const newItem = { ...bookingModal.item, price: chosen.fare, source: chosen.from, travelDate: modalSelectedDate };
                         setBookingModal({ open: true, item: newItem, idx: bookingModal.idx });
                         // proceed to seats
                         setModalFromOptions([]);
                         setSelectedFromIndex(-1);
                         setSavedFlowStep('selectSeats');
-                      }}>Book Bus Tickets from Selected Location</button>
+                      }}>{t('bookFromSelectedLocation')}</button>
                     </div>
                   </div>
                 </div>
@@ -689,7 +673,7 @@ const MyBookingsPage = () => {
                   <SeatSelector bookedSeats={bookingModal.item.bookedSeats || []} selectedSeats={selectedSeats} onSeatSelect={setSelectedSeats} />
                   <div className={styles.modalSummary}>
                     <p><strong>Selected Seats:</strong> {selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None'}</p>
-                    <p><strong>Total:</strong> {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((bookingModal.item.price || 5000) * selectedSeats.length)}</p>
+                    <p><strong>Total:</strong> {formatCurrency((bookingModal.item.price || 5000) * selectedSeats.length)}</p>
                     <div className={styles.modalActions}>
                       <button className={styles.smallBtn} onClick={() => { setBookingModal({ open: false, item: null, idx: -1 }); setSelectedSeats([]); setSavedFlowStep('chooseFrom'); }}>Cancel</button>
                       <button className={styles.smallBtnPrimary} onClick={() => {
@@ -723,7 +707,7 @@ const MyBookingsPage = () => {
             ))}
           </div>
         ) : (
-          <p>You have no past trips.</p>
+          <p>{t('noPastTrips')}</p>
         )}
       </section>
       {/* Ticket modal shown when user clicks View */}
@@ -761,9 +745,9 @@ const MyBookingsPage = () => {
                   <p>From: {fromLocation}</p>
                   <p>To: {toLocation}</p>
                   {perSeatPrice != null ? (
-                    <p>Price per seat: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(perSeatPrice)}</p>
+                    <p>Price per seat: {formatCurrency(perSeatPrice)}</p>
                   ) : null}
-                  <p style={{ fontWeight: 700, marginTop: 8 }}>Total: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(b.totalAmount || 0)}</p>
+                  <p style={{ fontWeight: 700, marginTop: 8 }}>Total: {formatCurrency(b.totalAmount || 0)}</p>
                   {b.bookingDate && <p>Booking Date: {new Date(b.bookingDate).toLocaleString()}</p>}
                   {b.savedAt && <p>Saved: {new Date(b.savedAt).toLocaleString()}</p>}
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>

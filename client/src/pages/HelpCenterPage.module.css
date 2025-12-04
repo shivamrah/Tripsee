@@ -1,0 +1,21 @@
+.container {
+  max-width: 920px;
+  margin: 24px auto;
+  padding: 16px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e6edf3;
+  padding: 16px;
+  margin-top: 16px;
+  border-radius: 6px;
+}
+
+.card h2 {
+  margin-top: 0;
+}
+
+a {
+  color: #0ea5e9;
+}

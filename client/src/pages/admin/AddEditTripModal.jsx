@@ -1,7 +1,8 @@
 
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import styles from "./AddEditTripModal.module.css";
+import { LocaleContext } from "../../context/LocaleContext";
 
 const AddEditTripModal = ({
   isOpen,
@@ -20,20 +21,20 @@ const AddEditTripModal = ({
     imageUrl: null,
   });
 
- 
+
   useEffect(() => {
     if (tripToEdit) {
       setFormData({
         source: tripToEdit.source,
         destination: tripToEdit.destination,
-        date: new Date(tripToEdit.date).toISOString().split("T")[0], 
+        date: new Date(tripToEdit.date).toISOString().split("T")[0],
         time: tripToEdit.time,
         price: tripToEdit.price,
         totalSeats: tripToEdit.totalSeats,
         imageUrl: tripToEdit.imageUrl,
       });
     } else {
-     
+
       setFormData({
         source: "",
         destination: "",
@@ -62,23 +63,25 @@ const AddEditTripModal = ({
 
   if (!isOpen) return null;
 
+  const { t } = useContext(LocaleContext);
+
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modalContent}>
-        <h2>{tripToEdit ? "Edit Trip" : "Add New Trip"}</h2>
+        <h2>{tripToEdit ? t('editTrip') : t('addNewTrip')}</h2>
         <form onSubmit={handleSubmit}>
           <input
             name="source"
             value={formData.source}
             onChange={handleChange}
-            placeholder="Source"
+            placeholder={t('source')}
             required
           />
           <input
             name="destination"
             value={formData.destination}
             onChange={handleChange}
-            placeholder="Destination"
+            placeholder={t('destination')}
             required
           />
           <input
@@ -100,7 +103,7 @@ const AddEditTripModal = ({
             type="number"
             value={formData.price}
             onChange={handleChange}
-            placeholder="Price"
+            placeholder={t('price')}
             required
           />
           <input
@@ -108,10 +111,10 @@ const AddEditTripModal = ({
             type="number"
             value={formData.totalSeats}
             onChange={handleChange}
-            placeholder="Total Seats"
+            placeholder={t('totalSeats')}
             required
           />
-          <label>Trip Image</label>
+          <label>{t('tripImage')}</label>
           <input
             name="imageUrl"
             type="file"
@@ -125,14 +128,14 @@ const AddEditTripModal = ({
               className={styles.cancelButton}
               disabled={isSaving}
             >
-              Cancel
+              {t('cancel')}
             </button>
             <button
               type="submit"
               className={styles.saveButton}
               disabled={isSaving}
             >
-              {isSaving ? "Saving..." : "Save"}
+              {isSaving ? t('saving') : t('save')}
             </button>
           </div>
         </form>

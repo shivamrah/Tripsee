@@ -14,7 +14,7 @@ const ConfirmationPage = () => {
   const ticketRef = useRef(null);
 
   const { bookingDetails, trip } = state || {};
-  const { t } = useContext(LocaleContext);
+  const { t, locale, formatCurrency } = useContext(LocaleContext);
 
   useEffect(() => {
     if (!bookingDetails || !trip) {
@@ -91,7 +91,7 @@ const ConfirmationPage = () => {
               <div>
                 <p className={styles.detailLabel}>{t('dateLabel')}</p>
                 <p className={styles.detailValue}>
-                  {travelDate.toLocaleDateString('en-GB')}
+                  {travelDate.toLocaleDateString(locale === 'en' ? 'en-IN' : `${locale}-IN`)}
                 </p>
               </div>
               <div>
@@ -103,7 +103,7 @@ const ConfirmationPage = () => {
               <div>
                 <p className={styles.detailLabel}>{t('totalFarePaid')}</p>
                 <p className={`${styles.detailValue} ${styles.price}`}>
-                  {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(total)}
+                  {formatCurrency(total)}
                 </p>
               </div>
             </div>

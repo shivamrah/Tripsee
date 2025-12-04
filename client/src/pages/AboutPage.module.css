@@ -1,0 +1,25 @@
+.container {
+  max-width: 900px;
+  margin: 28px auto;
+  padding: 16px;
+}
+
+.lead {
+  color: #374151;
+  font-size: 1.05rem;
+  margin-bottom: 12px;
+}
+
+.section {
+  background: #fff;
+  border: 1px solid #e6edf3;
+  padding: 14px;
+  margin-top: 14px;
+  border-radius: 6px;
+}
+
+.section h2 { margin-top: 0; }
+
+.section ul { margin: 8px 0 0 1.1rem; }
+
+a { color: #0ea5e9; }

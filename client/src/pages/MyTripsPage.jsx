@@ -5,6 +5,7 @@ import { AuthContext } from "../context/AuthContext";
 import { LocaleContext } from "../context/LocaleContext";
 import styles from "./MyTripsPage.module.css";
 import STATE_INFO from "../data/stateInfo";
+import Thumbnail from "../components/common/Thumbnail";
 
 const CART_KEY = "tripCart";
 
@@ -138,7 +139,7 @@ const MyTripsPage = () => {
                             {items.map((it) => (
                                 <tr key={it.id} className={styles.cartRow}>
                                     <td className={styles.tripCell} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                        <img src={getThumbnail(it)} alt={it.title} className={styles.thumb} />
+                                        <Thumbnail src={getThumbnail(it)} title={it.title} className={styles.thumb} />
                                         <div>
                                             <div style={{ fontWeight: 700 }}>{it.title}</div>
                                             <div className={styles.titleSmall}>{getSecondaryFromTitle(it.title)}</div>

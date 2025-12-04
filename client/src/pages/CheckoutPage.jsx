@@ -12,7 +12,7 @@ const CheckoutPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
-  const { t } = useContext(LocaleContext);
+  const { t, locale, formatCurrency } = useContext(LocaleContext);
 
 
   const [fullName, setFullName] = useState(user ? user.name : "");
@@ -164,7 +164,7 @@ const CheckoutPage = () => {
 
   return (
     <div className={styles.pageContainer}>
-      <h1>Checkout & Payment</h1>
+      <h1>{t('proceedToPayment')}</h1>
       <div className={styles.checkoutLayout}>
 
         <div className={styles.formSection}>
@@ -315,7 +315,7 @@ const CheckoutPage = () => {
               <strong>Route:</strong> {routeFrom} to {trip?.destination || ""}
             </p>
             <p>
-              <strong>Date:</strong> {new Date(travelDateFromState || trip.date).toLocaleDateString('en-GB')}
+              <strong>{t('dateLabel')}: </strong> {new Date(travelDateFromState || trip.date).toLocaleDateString(locale === 'en' ? 'en-IN' : `${locale}-IN`)}
             </p>
             <p>
               <strong>Time:</strong> {trip.time}
@@ -326,7 +326,7 @@ const CheckoutPage = () => {
             <hr className={styles.divider} />
             <p className={styles.totalFare}>
               <strong>Total Fare:</strong>{" "}
-              <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAmount)}</span>
+              <span>{formatCurrency(totalAmount)}</span>
             </p>
           </div>
           {error && <p className={styles.error}>{error}</p>}

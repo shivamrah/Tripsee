@@ -15,6 +15,12 @@ import ProfilePage from "./pages/ProfilePage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import ConfirmationPage from "./pages/ConfirmationPage";
+import HelpCenterPage from "./pages/HelpCenterPage";
+import AboutPage from "./pages/AboutPage";
+import CareersPage from "./pages/CareersPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsPage from "./pages/TermsPage";
+import HotelsPage from "./pages/HotelsPage";
 
 
 // Import Auth Components
@@ -36,6 +42,12 @@ function App() {
           <Route path="/trip/:id" element={<TripDetailsPage />} />
           <Route path="/book-tickets" element={<BookTicketsPage />} />
           <Route path="/places/:state" element={<PlacesPage />} />
+          <Route path="/hotels" element={<HotelsPage />} />
+          <Route path="/help" element={<HelpCenterPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/careers" element={<CareersPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
 
           {/* Protected User Routes */}
           <Route element={<ProtectedRoute />}>

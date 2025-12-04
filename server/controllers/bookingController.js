@@ -175,3 +175,75 @@ export const getAllBookings = async (req, res) => {
       .json({ message: "Server error while fetching all bookings" });
   }
 };
+
+export const updateBooking = async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    const { seats, totalAmount, travelDate, fromLocation } = req.body;
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+
+    // Keep a copy of previous seats for trip update logic
+    const prevSeats = Array.isArray(booking.seats) ? [...booking.seats] : [];
+
+    if (seats !== undefined) booking.seats = Array.isArray(seats) ? seats : (seats ? [seats] : []);
+    if (totalAmount !== undefined) booking.totalAmount = Number(totalAmount) || 0;
+    if (travelDate !== undefined) booking.travelDate = travelDate ? new Date(travelDate) : undefined;
+    if (fromLocation !== undefined) booking.fromLocation = fromLocation;
+
+    const updated = await booking.save();
+
+    // If this booking is linked to a real Trip, sync bookedSeats: remove prevSeats, add new seats
+    if (booking.trip) {
+      try {
+        const trip = await Trip.findById(booking.trip);
+        if (trip) {
+          // Remove previous seats
+          trip.bookedSeats = trip.bookedSeats.filter((s) => !prevSeats.includes(s));
+          // Add new seats without duplicates
+          const toAdd = (updated.seats || []).filter((s) => !trip.bookedSeats.includes(s));
+          trip.bookedSeats.push(...toAdd);
+          await trip.save();
+        }
+      } catch (err) {
+        console.error('Failed to sync trip bookedSeats after booking update:', err);
+      }
+    }
+
+    const populated = await Booking.findById(updated._id).populate('user', 'name email').populate('trip', 'source destination date');
+    res.json(populated);
+  } catch (error) {
+    console.error('updateBooking error:', error);
+    res.status(500).json({ message: 'Server error while updating booking', error: error.message });
+  }
+};
+
+
+export const deleteBooking = async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    const booking = await Booking.findById(bookingId);
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+
+    // If linked to real trip, remove seats from trip.bookedSeats
+    if (booking.trip) {
+      try {
+        const trip = await Trip.findById(booking.trip);
+        if (trip) {
+          const seatsToRemove = booking.seats || [];
+          trip.bookedSeats = trip.bookedSeats.filter((s) => !seatsToRemove.includes(s));
+          await trip.save();
+        }
+      } catch (err) {
+        console.error('Failed to update trip after booking deletion:', err);
+      }
+    }
+
+    await Booking.findByIdAndDelete(bookingId);
+    res.json({ message: 'Booking deleted' });
+  } catch (error) {
+    console.error('deleteBooking error:', error);
+    res.status(500).json({ message: 'Server error while deleting booking', error: error.message });
+  }
+};

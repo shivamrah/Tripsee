@@ -121,10 +121,10 @@ const Navbar = () => {
             <>
 
               <Link to="/login" className={styles.navLink}>
-                Login
+                {t('login')}
               </Link>
               <Link to="/signup" className={styles.navLink}>
-                Sign Up
+                {t('signup')}
               </Link>
             </>
           )}

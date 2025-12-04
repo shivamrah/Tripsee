@@ -1,4 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
-  <rect width="100%" height="100%" fill="#f59e0b"/>
-  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="40" fill="#ffffff">Andhra Pradesh</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <style>
+      .mask-rect { rx: 20; }
+      .title { font-family: Inter, Arial, Helvetica, sans-serif; fill: #ffffff; font-weight:700; font-size:40px }
+      .overlay { fill: rgba(0,0,0,0.28); }
+    </style>
+  </defs>
+  <!-- Embed external image for Andhra Pradesh -->
+  <rect width="100%" height="100%" fill="#000" rx="20"/>
+  <image href="https://media.istockphoto.com/id/1285898933/photo/tall-buddha-statue-in-andhra-pradesh-state-amaravathi-india.jpg?s=612x612&w=0&k=20&c=3R939IZv0lNRZSTOCXB4KLvrFJgzJG08bjdC2M-gBy8=" x="0" y="0" width="1200" height="800" preserveAspectRatio="xMidYMid slice"/>
+  <!-- subtle dark overlay so white text remains readable -->
+  <rect class="overlay" x="0" y="0" width="1200" height="800" rx="20"/>
+  <g transform="translate(48,60)">
+    <text class="title">Andhra Pradesh</text>
+  </g>
 </svg>

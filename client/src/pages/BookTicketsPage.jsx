@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { LocaleContext } from "../context/LocaleContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import API from "../api";
 import styles from "./BookTicketsPage.module.css";
@@ -70,25 +71,26 @@ const BookTicketsPage = () => {
 
     const filtered = results.length > 0 ? results.map((r) => r.value) : cities.filter((c) => c.toLowerCase().includes(query.trim().toLowerCase()));
 
+    const { formatCurrency, t } = useContext(LocaleContext);
     const formatPrice = (base, i) => {
         const offset = ((i % 6) + 1) * 200; // deterministic offset
         const price = (base || 5000) + offset;
-        return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(price);
+        return formatCurrency(price);
     };
 
     const handleProceed = () => {
         setError("");
         if (!selectedFrom) {
-            setError("Please choose a departure city from the list or using search.");
+            setError(t('pleaseSelectDeparture'));
             return;
         }
         if (!trip) {
-            setError("Trip information not available.");
+            setError(t('tripInfoNotAvailable'));
             return;
         }
         // validate date
         if (!selectedDate) {
-            setError("Please choose a travel date before proceeding.");
+            setError(t('pleaseChooseTravelDate'));
             return;
         }
         const picked = new Date(selectedDate);
@@ -104,22 +106,22 @@ const BookTicketsPage = () => {
     return (
         <div className={styles.pageContainer}>
             <div className={styles.modalCard}>
-                <h2>Choose departure for {trip ? `${trip.source} — ${trip.destination}` : "selected trip"}</h2>
+                <h2>{t('chooseDepartureTitle')} for {trip ? `${trip.source} — ${trip.destination}` : t('selectedTrip') || "selected trip"}</h2>
 
                 <div className={styles.contentRow}>
                     <div className={styles.leftColumn}>
                         <div className={styles.searchRow}>
                             <input
                                 className={styles.searchInput}
-                                placeholder="Search city (all India)"
+                                placeholder={t('searchCityPlaceholder')}
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                             />
                         </div>
 
                         <ul className={styles.cityList}>
-                            {loading && <li className={styles.noResult}>Searching...</li>}
-                            {!loading && filtered.length === 0 && <li className={styles.noResult}>No results</li>}
+                            {loading && <li className={styles.noResult}>{t('searching')}</li>}
+                            {!loading && filtered.length === 0 && <li className={styles.noResult}>{t('noResults')}</li>}
                             {!loading && filtered.map((c, i) => (
                                 <li key={c + i} className={styles.cityRow}>
                                     <label>
@@ -145,8 +147,8 @@ const BookTicketsPage = () => {
                                 <input type="date" className={styles.input} value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} min={new Date().toISOString().slice(0, 10)} />
                             </div>
                             <div className={styles.actionsArea}>
-                                <button className={styles.cancel} onClick={() => navigate(-1)}>Cancel</button>
-                                <button className={styles.proceed} onClick={handleProceed}>Book Bus Tickets from Selected Location</button>
+                                <button className={styles.cancel} onClick={() => navigate(-1)}>{t('cancel')}</button>
+                                <button className={styles.proceed} onClick={handleProceed}>{t('bookFromSelectedLocation')}</button>
                             </div>
                         </div>
                     </div>

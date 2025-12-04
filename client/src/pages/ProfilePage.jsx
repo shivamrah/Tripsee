@@ -9,7 +9,7 @@ import "../styles/ProfilePage.css";
 
 const ProfilePage = () => {
   const { user } = useContext(AuthContext);
-  const { t } = useContext(LocaleContext);
+  const { t, locale } = useContext(LocaleContext);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -49,7 +49,7 @@ const ProfilePage = () => {
 
 
   const accountCreationDate = user.accountCreationDate
-    ? new Date(user.accountCreationDate).toLocaleDateString("en-US", {
+    ? new Date(user.accountCreationDate).toLocaleDateString(locale === 'en' ? 'en-IN' : `${locale}-IN`, {
       year: "numeric",
       month: "long",
       day: "numeric",

@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useContext } from "react";
+import { LocaleContext } from "../../context/LocaleContext";
 import Modal from "../../components/common/Modal";
 import styles from "./AdminDashboardPage.module.css";
 
 const TripBookingsModal = ({ isOpen, onClose, bookings, trip }) => {
+
+  const { locale, formatCurrency } = useContext(LocaleContext);
 
   if (!trip) return null;
 
@@ -39,9 +42,9 @@ const TripBookingsModal = ({ isOpen, onClose, bookings, trip }) => {
                     <td>{booking.user?.email || 'N/A'}</td>
                     <td>{from}</td>
                     <td>{to}</td>
-                    <td>{date ? date.toLocaleDateString() : 'N/A'}</td>
+                    <td>{date ? date.toLocaleDateString(locale === 'en' ? 'en-IN' : `${locale}-IN`) : 'N/A'}</td>
                     <td>{booking.seats.join(", ")}</td>
-                    <td>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(booking.totalAmount || 0)}</td>
+                    <td>{formatCurrency(booking.totalAmount || 0)}</td>
                     <td>{booking.bookingDate ? new Date(booking.bookingDate).toLocaleString() : 'N/A'}</td>
                   </tr>
                 );

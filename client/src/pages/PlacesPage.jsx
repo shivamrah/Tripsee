@@ -16,7 +16,7 @@ const PlacesPage = () => {
     const decoded = decodeURIComponent(state).replace(/_/g, " ");
     const meta = STATE_INFO[decoded];
 
-    const { t } = useContext(LocaleContext);
+    const { t, formatCurrency } = useContext(LocaleContext);
     if (!meta) return <p style={{ padding: 20 }}>{t('noData')} "{decoded}"</p>;
 
     const attractions = meta.attractions || [];
@@ -74,7 +74,7 @@ const PlacesPage = () => {
                 localStorage.setItem("tripCart", JSON.stringify(cart));
                 localStorage.setItem("tripCart", JSON.stringify(cart));
                 window.dispatchEvent(new Event("tripCartUpdated"));
-                alert("Added to My Trips");
+                alert(t('addToMyTrips'));
             } catch (err) {
                 console.error(err);
             }
@@ -101,7 +101,7 @@ const PlacesPage = () => {
                         </div>
                     </div>
                     <p className={styles.priceBadge}>
-                        {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(a.price + 5000)} {t('perPerson')}
+                        {formatCurrency(a.price + 5000, { maximumFractionDigits: 0 })} {t('perPerson')}
                     </p>
                     {usedUnsplash && (
                         <p className={styles.attribution}>

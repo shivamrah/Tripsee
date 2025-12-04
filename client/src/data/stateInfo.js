@@ -3,7 +3,7 @@ const STATE_INFO = {
         description:
             "A southeastern state known for its long coastline, historic temples and cuisine.",
         imageQuery: "Andhra Pradesh city",
-        imagePath: "/state-images/Andhra_Pradesh.svg",
+        imagePath: "https://media.istockphoto.com/id/1285898933/photo/tall-buddha-statue-in-andhra-pradesh-state-amaravathi-india.jpg?s=612x612&w=0&k=20&c=3R939IZv0lNRZSTOCXB4KLvrFJgzJG08bjdC2M-gBy8=",
         attractions: [
             { name: "Tirupati Balaji Temple", price: 300 },
             { name: "Araku Valley", price: 800 },
@@ -16,7 +16,7 @@ const STATE_INFO = {
     "Arunachal Pradesh": {
         description: "A Himalayan state with lush valleys, tribal culture and mountain views.",
         imageQuery: "Arunachal Pradesh landscape",
-        imagePath: "/state-images/Arunachal_Pradesh.svg",
+        imagePath: "https://media.istockphoto.com/id/910430170/photo/tawang-arunachal-pradesh.jpg?s=612x612&w=0&k=20&c=MKKYsHH_6JRMYROO2bHIsQAW9XoSnl-9nkRGOFgAg0M=",
         attractions: [
             { name: "Tawang Monastery", price: 350 },
             { name: "Ziro Valley", price: 700 },
@@ -29,7 +29,7 @@ const STATE_INFO = {
     Assam: {
         description: "Northeastern state known for tea gardens, wildlife and the Brahmaputra River.",
         imageQuery: "Assam tea garden",
-        imagePath: "/state-images/Assam.svg",
+        imagePath: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8QL7RO-1SaIVs13T0Z6CueGljNWavqt3S5A&s",
         attractions: [
             { name: "Kaziranga National Park", price: 1200 },
             { name: "Majuli Island", price: 500 },
@@ -42,7 +42,7 @@ const STATE_INFO = {
     Bihar: {
         description: "An eastern state with rich historical sites and Buddhist heritage.",
         imageQuery: "Bihar heritage site",
-        imagePath: "/state-images/Bihar.svg",
+        imagePath: "https://media.istockphoto.com/id/530927704/photo/mahabodhi-temple-bodhgaya.jpg?s=612x612&w=0&k=20&c=MeuSoIquuLhsQB5JNv3zDn8G6IPuNRlbcIW9EZd4o3o=",
         attractions: [
             { name: "Bodh Gaya", price: 200 },
             { name: "Nalanda University ruins", price: 300 },
@@ -55,7 +55,7 @@ const STATE_INFO = {
     "Chhattisgarh": {
         description: "Central Indian state known for forests, waterfalls and tribal traditions.",
         imageQuery: "Chhattisgarh waterfall",
-        imagePath: "/state-images/Chhattisgarh.svg",
+        imagePath: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVo2jHgQmJdq_o4QLWn09kt02V0E6FNiqixQ&s",
         attractions: [
             { name: "Chitrakote Falls", price: 350 },
             { name: "Barnawapara Wildlife Sanctuary", price: 800 },
@@ -68,7 +68,7 @@ const STATE_INFO = {
     Goa: {
         description: "A small coastal state famous for beaches, seafood and Portuguese heritage.",
         imageQuery: "Goa beach",
-        imagePath: "/state-images/Goa.svg",
+        imagePath: "https://cdn.wallpapersafari.com/25/43/shVYSl.jpg",
         attractions: [
             { name: "Baga Beach", price: 300 },
             { name: "Old Goa Basilica", price: 150 },

@@ -5,9 +5,10 @@ import STATE_INFO from "../../data/stateInfo";
 import { LocaleContext } from "../../context/LocaleContext";
 
 const TripCard = ({ trip }) => {
-  const { t } = useContext(LocaleContext);
+  const { t, locale, formatCurrency } = useContext(LocaleContext);
 
-  const tripDate = new Date(trip.date).toLocaleDateString("en-US", {
+  const dateLocaleTag = locale === 'en' ? 'en-IN' : `${locale}-IN`;
+  const tripDate = new Date(trip.date).toLocaleDateString(dateLocaleTag, {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -45,7 +46,7 @@ const TripCard = ({ trip }) => {
                 <ul className={styles.attractions}>
                   {stateMeta.attractions.slice(0, 3).map((a) => (
                     <li key={a.name} className={styles.attractionItem}>
-                      {a.name} — <span className={styles.priceBadge}>{new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(a.price + 5000)}</span>
+                      {a.name} — <span className={styles.priceBadge}>{formatCurrency(a.price + 5000, { maximumFractionDigits: 0 })}</span>
                     </li>
                   ))}
                 </ul>
@@ -56,7 +57,7 @@ const TripCard = ({ trip }) => {
         <div className={styles.priceSection}>
           <div style={{ display: "flex", gap: 8 }}>
             <Link to={`/book-tickets`} state={{ tripId: trip._id, trip }} className={styles.bookButton}>
-              Book Tickets
+              {t('bookTickets')}
             </Link>
             <button
               className={styles.addButton}

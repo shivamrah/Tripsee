@@ -3,8 +3,10 @@
 import React, { useState, useEffect, useContext } from "react";
 import API from "../../api";
 import { AuthContext } from "../../context/AuthContext";
+import { LocaleContext } from "../../context/LocaleContext";
 import AddEditTripModal from "./AddEditTripModal";
 import TripBookingsModal from "./TripBookingModal";
+import EditBookingModal from "./EditBookingModal";
 import styles from "./AdminDashboardPage.module.css";
 
 const AdminDashboardPage = () => {
@@ -20,8 +22,11 @@ const AdminDashboardPage = () => {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedTripBookings, setSelectedTripBookings] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
+  const [isEditBookingOpen, setIsEditBookingOpen] = useState(false);
+  const [editingBooking, setEditingBooking] = useState(null);
 
   const { user } = useContext(AuthContext);
+  const { t, locale, formatCurrency } = useContext(LocaleContext);
 
 
   const fetchData = async () => {
@@ -86,7 +91,7 @@ const AdminDashboardPage = () => {
       handleCloseModal();
     } catch (error) {
       console.error("Failed to save trip", error);
-      alert("Failed to save trip. Please check the console for details.");
+      alert(t('failedToSaveTrip'));
     } finally {
       setIsSaving(false);
     }
@@ -116,7 +121,28 @@ const AdminDashboardPage = () => {
       setIsDetailsModalOpen(true);
     } catch (error) {
       console.error("Failed to fetch trip bookings", error);
-      alert("Could not load booking details.");
+      alert(t('couldNotLoadBookingDetails'));
+    }
+  };
+
+  const handleEditBooking = (booking) => {
+    setEditingBooking(booking);
+    setIsEditBookingOpen(true);
+  };
+
+  const handleCloseEditBooking = () => {
+    setIsEditBookingOpen(false);
+    setEditingBooking(null);
+  };
+
+  const handleDeleteBooking = async (bookingId) => {
+    if (!window.confirm(t('confirmDeleteBooking'))) return;
+    try {
+      await API.delete(`/bookings/${bookingId}`);
+      fetchData();
+    } catch (err) {
+      console.error('Failed to delete booking', err);
+      alert(t('failedToDeleteBooking'));
     }
   };
 
@@ -124,30 +150,30 @@ const AdminDashboardPage = () => {
     setIsDetailsModalOpen(false);
   };
 
-  if (loading) return <p>Loading dashboard...</p>;
+  if (loading) return <p>{t('loadingDashboard')}</p>;
 
   return (
     <div className={styles.dashboardContainer}>
-      <h1>Admin Dashboard</h1>
+      <h1>{t('adminDashboard')}</h1>
       <button
         onClick={() => handleOpenModal()}
         className={styles.addTripButton}
       >
-        + Add New Trip
+        {t('addNewTrip')}
       </button>
 
 
       <div className={styles.tableContainer}>
-        <h2>Trip Management</h2>
+        <h2>{t('tripManagement')}</h2>
         <table>
           <thead>
             <tr>
-              <th>Source</th>
-              <th>Destination</th>
-              <th>Date</th>
-              <th>Price</th>
-              <th>Seats</th>
-              <th>Actions</th>
+              <th>{t('sourceLabel')}</th>
+              <th>{t('destinationLabel')}</th>
+              <th>{t('dateLabel')}</th>
+              <th>{t('priceLabel')}</th>
+              <th>{t('seatsLabelShort')}</th>
+              <th>{t('actionsLabel')}</th>
             </tr>
           </thead>
           <tbody>
@@ -155,8 +181,8 @@ const AdminDashboardPage = () => {
               <tr key={trip._id}>
                 <td>{trip.source}</td>
                 <td>{trip.destination}</td>
-                <td>{new Date(trip.date).toLocaleDateString()}</td>
-                <td>${trip.price}</td>
+                <td>{new Date(trip.date).toLocaleDateString(locale === 'en' ? 'en-IN' : `${locale}-IN`)}</td>
+                <td>{formatCurrency(trip.price)}</td>
                 <td>
                   {trip.bookedSeats.length} / {trip.totalSeats}
                 </td>
@@ -165,19 +191,19 @@ const AdminDashboardPage = () => {
                     onClick={() => handleViewDetails(trip)}
                     className={styles.detailsButton}
                   >
-                    Details
+                    {t('details')}
                   </button>
                   <button
                     onClick={() => handleOpenModal(trip)}
                     className={styles.editButton}
                   >
-                    Edit
+                    {t('edit')}
                   </button>
                   <button
                     onClick={() => handleDeleteTrip(trip._id)}
                     className={styles.deleteButton}
                   >
-                    Delete
+                    {t('delete')}
                   </button>
                 </td>
               </tr>
@@ -188,7 +214,7 @@ const AdminDashboardPage = () => {
 
 
       <div className={styles.tableContainer} style={{ marginTop: "2rem" }}>
-        <h2>Booking Management</h2>
+        <h2>{t('bookingManagement')}</h2>
         <table>
           <thead>
             <tr>
@@ -217,8 +243,12 @@ const AdminDashboardPage = () => {
                 <td>{(booking.tripInfo && (booking.tripInfo.destination || (booking.tripInfo.attractions && booking.tripInfo.attractions[0]?.name))) || (booking.trip && booking.trip.destination) || 'N/A'}</td>
                 <td>{booking.travelDate ? new Date(booking.travelDate).toLocaleDateString() : booking.tripInfo && booking.tripInfo.date ? new Date(booking.tripInfo.date).toLocaleDateString() : booking.trip ? new Date(booking.trip.date).toLocaleDateString() : 'N/A'}</td>
                 <td>{booking.seats.join(", ")}</td>
-                <td>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(booking.totalAmount || 0)}</td>
+                <td>{formatCurrency(booking.totalAmount || 0)}</td>
                 <td>{booking.bookingDate ? new Date(booking.bookingDate).toLocaleString() : (booking.bookingDate === undefined && booking.createdAt ? new Date(booking.createdAt).toLocaleString() : 'N/A')}</td>
+                <td>
+                  <button className={styles.editButton} onClick={() => handleEditBooking(booking)}>Edit</button>
+                  <button className={styles.deleteButton} onClick={() => handleDeleteBooking(booking._id)}>Delete</button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -240,6 +270,14 @@ const AdminDashboardPage = () => {
         bookings={selectedTripBookings}
         trip={selectedTrip}
       />
+
+      <EditBookingModal
+        isOpen={isEditBookingOpen}
+        onClose={handleCloseEditBooking}
+        booking={editingBooking}
+        onSaved={() => fetchData()}
+      />
+
     </div>
   );
 };
