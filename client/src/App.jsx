@@ -48,14 +48,14 @@ function App() {
           <Route path="/careers" element={<CareersPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/terms" element={<TermsPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/confirmation" element={<ConfirmationPage />} />
 
           {/* Protected User Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/my-bookings" element={<MyBookingsPage />} />
             <Route path="/my-trips" element={<MyTripsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/confirmation" element={<ConfirmationPage />} />
           </Route>
 
           {/* Protected Admin Routes */}

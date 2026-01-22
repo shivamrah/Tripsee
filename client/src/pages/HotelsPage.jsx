@@ -19,6 +19,8 @@ const formatDate = (d) => {
 const HotelsPage = () => {
     const loc = useLocation();
     const navigate = useNavigate();
+    const pkg = loc.state && loc.state.package ? loc.state.package : null;
+    const checkoutState = loc.state && loc.state.checkoutState ? loc.state.checkoutState : null;
     const prefilledTrip = loc.state && loc.state.trip ? loc.state.trip : null;
 
     const [step, setStep] = useState("selectRoom");
@@ -73,6 +75,28 @@ const HotelsPage = () => {
         setBooking(newBooking);
         setProcessing(false);
         setStep("receipt");
+        // After showing receipt, automatically guide back to ticket checkout
+        setTimeout(() => {
+            continueToTickets();
+        }, 800);
+    };
+
+    const continueToTickets = () => {
+        // Fall back to home if we lack context
+        if (!checkoutState) {
+            navigate('/');
+            return;
+        }
+        navigate('/checkout', {
+            state: {
+                ...checkoutState,
+                hotelBooking: booking,
+                trip: checkoutState.trip || prefilledTrip || { title: pkg ? `${pkg.state} Package` : 'Package', _isPackage: true },
+                _isPackage: true,
+                _packageItems: (pkg && pkg.items) || (checkoutState.trip && checkoutState.trip._packageItems) || [],
+                _packageState: (pkg && pkg.state) || (checkoutState.trip && checkoutState.trip._packageState) || undefined,
+            },
+        });
     };
 
     return (
@@ -156,6 +180,7 @@ const HotelsPage = () => {
                     <div className={styles.controls}>
                         <button className={styles.btnPrimary} onClick={() => window.print()}>Print / Save</button>
                         <button className={styles.btnGhost} onClick={() => navigate('/my-bookings')}>Go to My Bookings</button>
+                        <button className={styles.btnPrimary} onClick={continueToTickets}>Continue to package tickets</button>
                     </div>
                 </div>
             )}

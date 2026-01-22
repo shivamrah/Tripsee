@@ -35,7 +35,7 @@ const INDIAN_STATES = [
 
 const TripFilter = ({ filters = {}, onFilterChange, onSearch }) => {
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
+  const [suggestions, setSuggestions] = useState(INDIAN_STATES);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const wrapperRef = useRef(null);
@@ -51,32 +51,47 @@ const TripFilter = ({ filters = {}, onFilterChange, onSearch }) => {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
+  const openAllStates = () => {
+    setSuggestions(INDIAN_STATES);
+    setOpen(true);
+    setActiveIndex(0);
+  };
+
   const handleChange = (e) => {
     const val = e.target.value;
     setQuery(val);
-    if (val.length >= 2) {
-      // Show states whose names start with the typed letters first,
-      // then show all other states below (so the matched state is prominent).
-      const normalized = val.trim().toLowerCase();
-      const prefixMatches = INDIAN_STATES.filter((s) => s.toLowerCase().startsWith(normalized));
-      const otherStates = INDIAN_STATES.filter((s) => !prefixMatches.includes(s));
-      const ordered = [...prefixMatches, ...otherStates];
-      setSuggestions(ordered);
-      // Keep the dropdown open so the user can see matches + the rest.
-      setOpen(ordered.length > 0);
-      setActiveIndex(ordered.length > 0 ? 0 : -1);
-    } else {
-      setSuggestions([]);
-      setOpen(false);
-      setActiveIndex(-1);
+    const normalized = val.trim().toLowerCase();
+
+    // When the field is empty, show the full state list immediately.
+    if (!normalized) {
+      openAllStates();
+      if (onFilterChange) onFilterChange("source", "");
+      return;
     }
+
+    // When the user types, show matching states prioritized by relevance
+    // First: states that start with the search term
+    const startsWithMatch = INDIAN_STATES.filter((s) => s.toLowerCase().startsWith(normalized));
+    // Then: states that contain the search term but don't start with it
+    const containsMatch = INDIAN_STATES.filter(
+      (s) => s.toLowerCase().includes(normalized) && !s.toLowerCase().startsWith(normalized)
+    );
+    // Combine with startsWith matches first (higher priority)
+    const filtered = [...startsWithMatch, ...containsMatch];
+
+    setSuggestions(filtered);
+    setOpen(filtered.length > 0);
+    setActiveIndex(filtered.length > 0 ? 0 : -1);
+
+    // Update filters in real-time so state cards filter immediately
+    if (onFilterChange) onFilterChange("source", val);
   };
 
   const clear = () => {
     setQuery("");
-    setSuggestions([]);
-    setOpen(false);
-    setActiveIndex(-1);
+    setSuggestions(INDIAN_STATES);
+    setOpen(true);
+    setActiveIndex(0);
     if (onFilterChange) onFilterChange("source", "");
   };
 
@@ -103,7 +118,7 @@ const TripFilter = ({ filters = {}, onFilterChange, onSearch }) => {
 
   const handleSelect = (state) => {
     setQuery(state);
-    setSuggestions([]);
+    setSuggestions(INDIAN_STATES);
     setOpen(false);
     if (onFilterChange) onFilterChange("source", state);
   };
@@ -119,7 +134,7 @@ const TripFilter = ({ filters = {}, onFilterChange, onSearch }) => {
       const chosen = exact || (prefixMatches.length > 0 ? prefixMatches[0] : null);
       if (chosen) {
         setQuery(chosen);
-        setSuggestions([]);
+        setSuggestions(INDIAN_STATES);
         setOpen(false);
         if (onFilterChange) onFilterChange("source", chosen);
         if (onSearch) onSearch();
@@ -147,6 +162,12 @@ const TripFilter = ({ filters = {}, onFilterChange, onSearch }) => {
               value={query}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
+              onFocus={() => {
+                if (!query) {
+                  setSuggestions(INDIAN_STATES);
+                }
+                setOpen(true);
+              }}
               autoComplete="off"
             />
             {query && (

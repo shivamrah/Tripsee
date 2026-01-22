@@ -1,8 +1,6 @@
-
-
 .seatSelector {
     background: #f9fafb;
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 1.5rem;
     margin-top: 1.5rem;
 }
@@ -10,33 +8,138 @@
 .title {
     font-size: 1.2rem;
     font-weight: 600;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     color: #1f2937;
+    text-align: center;
 }
 
-.seatGrid {
+.deckContainer {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
-    gap: 0.5rem;
-    justify-items: center;
+    grid-template-columns: 280px 280px;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    justify-content: start;
+}
+
+.deckSection {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    width: 100%;
+}
+
+.deckHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 1rem;
+}
+
+.deckTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 1rem 0;
+}
+
+.driverIcon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    border-radius: 50%;
+}
+
+.steeringWheel {
+    width: 24px;
+    height: 24px;
+    color: #6b7280;
+}
+
+.busLayout {
+    min-height: 400px;
+}
+
+.lowerDeckGrid {
+    display: grid;
+    grid-template-columns: 65px 55px 55px;
+    grid-auto-rows: 55px;
+    gap: 6px;
+    justify-content: center;
+}
+
+.upperDeckGrid {
+    display: grid;
+    grid-template-columns: 65px 60px 60px;
+    grid-auto-rows: 60px;
+    gap: 6px;
+    justify-content: start;
 }
 
 .seat {
-    width: 50px;
-    height: 50px;
-    border-radius: 6px;
-    border: 1px solid #e5e7eb;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    border: 1.5px solid;
     background: #ffffff;
     cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #374151;
+    font-size: 0.7rem;
     transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 3px;
 }
 
-.seat:hover {
+.regularSeat {
+    border-color: #10b981;
+}
+
+.sleeperSeat {
+    border-color: #10b981;
+}
+
+.available {
+    border-color: #10b981;
+    background: #ffffff;
+}
+
+.sold {
     background: #f3f4f6;
+    border-color: #d1d5db;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.selected {
+    background: #dbeafe !important;
+    border-color: #3b82f6 !important;
+}
+
+.seatIcon {
+    font-size: 1.3rem;
+}
+
+.priceText {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.soldText {
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: #9ca3af;
+}
+
+.seat:hover:not(:disabled) {
+    transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .booked {
@@ -52,35 +155,59 @@
 
 .legend {
     display: flex;
-    gap: 1rem;
-    margin-bottom: 0.5rem;
-    font-size: 0.85rem;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
     color: #6b7280;
+    flex-wrap: wrap;
+}
+
+.legend p {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
 }
 
 .legendItem {
-    width: 15px;
-    height: 15px;
+    width: 20px;
+    height: 20px;
     display: inline-block;
-    margin-right: 5px;
-    border-radius: 3px;
+    border-radius: 4px;
 }
 
 .available {
     background: #ffffff;
-    border: 1px solid #e5e7eb;
+    border: 2px solid #10b981;
 }
 
 .booked {
-    background: #f87171;
+    background: #e5e7eb;
+    border: 2px solid #d1d5db;
 }
 
 .selected {
-    background: #2563eb;
+    background: #3b82f6;
+    border: 2px solid #2563eb;
 }
 
 .bookedSeatsInfo {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: #374151;
-    margin-top: 0.5rem;
+    text-align: center;
+    padding: 0.75rem;
+    background: #f3f4f6;
+    border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+    .deckContainer {
+        grid-template-columns: 1fr;
+    }
+
+    .lowerDeckGrid,
+    .upperDeckGrid {
+        justify-content: center;
+    }
 }

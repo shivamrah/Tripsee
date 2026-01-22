@@ -11,6 +11,7 @@ import SeatSelector from "../components/trips/SeatSelector";
 import Modal from "../components/common/Modal";
 
 import Thumbnail from "../components/common/Thumbnail";
+import STATE_INFO from "../data/stateInfo";
 
 // Live clock component for card Time field
 const Clock = () => {
@@ -381,7 +382,21 @@ const MyBookingsPage = () => {
       try {
         const raw = localStorage.getItem("tripCart");
         if (!raw) return setSavedTrips([]);
-        setSavedTrips(JSON.parse(raw));
+        const parsed = JSON.parse(raw);
+        // normalize entries to ensure imageUrl is present for thumbnails
+        const normalized = parsed.map((item) => {
+          if (item.imageUrl || item.imagePath) return item;
+          // attempt to derive from state metadata if title contains a primary state
+          const title = item.title || "";
+          const primary = title.split(/→|—|-/).map(p => p.trim()).filter(Boolean)[0] || "";
+          const meta = STATE_INFO[primary];
+          if (meta && meta.imagePath) return { ...item, imageUrl: meta.imagePath };
+          // fallback to unsplash
+          const fallbackQuery = encodeURIComponent(item.title || primary || "india");
+          return { ...item, imageUrl: `https://source.unsplash.com/160x120/?${fallbackQuery}` };
+        });
+        setSavedTrips(normalized);
+        localStorage.setItem("tripCart", JSON.stringify(normalized));
       } catch (e) {
         setSavedTrips([]);
       }
@@ -403,9 +418,16 @@ const MyBookingsPage = () => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const upcomingBookings = bookings.filter(
-    (b) => b.trip && new Date(b.trip.date) >= today
-  );
+  // Normalize bookings to use server-provided `tripInfo` (falls back to trip or snapshot)
+  const normalizedBookings = bookings.map((b) => ({
+    ...b,
+    _info: b.tripInfo || b.trip || b.tripSnapshot || {},
+  }));
+
+  const upcomingBookings = normalizedBookings.filter((b) => {
+    const d = b._info && b._info.date ? new Date(b._info.date) : null;
+    return d ? d >= today : true;
+  });
   // Map saved trips (from tripCart) into booking-like objects so they appear under Upcoming Bookings
   const savedAsBookings = (savedTrips || []).map((item, i) => {
     const date = item.date ? new Date(item.date) : new Date();
@@ -422,9 +444,10 @@ const MyBookingsPage = () => {
   });
 
   const upcomingCombined = [...savedAsBookings, ...upcomingBookings];
-  const pastBookings = bookings.filter(
-    (b) => b.trip && new Date(b.trip.date) < today
-  );
+  const pastBookings = normalizedBookings.filter((b) => {
+    const d = b._info && b._info.date ? new Date(b._info.date) : null;
+    return d ? d < today : false;
+  });
 
   useEffect(() => {
     const onAuthLogout = () => {
@@ -464,6 +487,8 @@ const MyBookingsPage = () => {
     };
   }, [modalSearchQuery]);
 
+  const safeSavedTrips = Array.isArray(savedTrips) ? savedTrips : [];
+
   if (loading) return <p className={styles.centeredMessage}>{t('loading')} {t('myBookings').toLowerCase()}...</p>;
 
   if (error) {
@@ -495,73 +520,167 @@ const MyBookingsPage = () => {
     <div className={styles.pageContainer}>
       <h1 className={styles.pageTitle}>{t('myBookings')}</h1>
 
-      {/* Saved trips from localStorage (My Trips) */}
+      {/* Saved trips shown as a single package with bottom-level actions */}
       <section className={styles.savedSection}>
         <h2 className={styles.sectionTitle}>{t('savedTrips')}</h2>
-        {savedTrips && savedTrips.length > 0 ? (
-          <div className={styles.savedList}>
-            {savedTrips.map((item, idx) => (
-              <div key={idx} className={styles.savedItem}>
-                <Thumbnail
-                  src={item.imageUrl || item.imagePath}
-                  title={item.title}
-                  className={styles.thumbSmall}
-                />
-                <div className={styles.savedMeta}>
-                  <div className={styles.savedTitle}>{item.title}</div>
-                  <div className={styles.savedSub}>{item.qty} ticket(s)</div>
+        {safeSavedTrips.length > 0 ? (() => {
+          try {
+            const inferState = (item) => {
+              const fromPackage = item.packageState || '';
+              const fromTitle = (item.title || '').split(/→|—|–|-/).map((p) => p.trim()).filter(Boolean)[0] || '';
+              return (fromPackage || fromTitle || 'Selected State').trim();
+            };
+
+            const sortedByDay = [...safeSavedTrips]
+              .map((it, idx) => ({
+                ...it,
+                originalIndex: idx,
+                _state: inferState(it),
+                sortDay: Number.isFinite(it.day) ? it.day : idx + 1,
+              }))
+              .sort((a, b) => (a.sortDay || 0) - (b.sortDay || 0));
+
+            const itinerary = [];
+            let dayCounter = 1;
+            for (let i = 0; i < sortedByDay.length; i++) {
+              const current = sortedByDay[i];
+              itinerary.push({ ...current, day: dayCounter++, _kind: 'place' });
+
+              const next = sortedByDay[i + 1];
+              if (
+                next &&
+                current._state &&
+                next._state &&
+                current._state.toLowerCase() !== next._state.toLowerCase()
+              ) {
+                itinerary.push({
+                  _kind: 'travel',
+                  day: dayCounter++,
+                  fromState: current._state,
+                  toState: next._state,
+                });
+              }
+            }
+
+            const packageStates = sortedByDay
+              .map((it) => it._state)
+              .filter(Boolean)
+              .filter((state, idx, arr) => idx === arr.findIndex((s) => (s || '').toLowerCase() === (state || '').toLowerCase()));
+            const packageTitle = packageStates.length > 1 ? packageStates.join(' → ') : (packageStates[0] || 'Selected State');
+            const placeCount = sortedByDay.length;
+            const total = sortedByDay.reduce((sum, it) => sum + (it.price || 0) * (it.qty || 1), 0);
+
+            const removeItem = (originalIndex) => {
+              try {
+                const raw = localStorage.getItem("tripCart");
+                const arr = raw ? JSON.parse(raw) : [];
+                const filtered = arr.filter((_, i) => i !== originalIndex);
+                localStorage.setItem("tripCart", JSON.stringify(filtered));
+                window.dispatchEvent(new Event("tripCartUpdated"));
+                setSavedTrips(filtered);
+              } catch (e) {
+                // ignore
+              }
+            };
+
+            return (
+              <div className={styles.packageCard}>
+                <div className={styles.packageHeader}>
+                  <div>
+                    <div className={styles.packageLabel}>State Tour Package</div>
+                    <div className={styles.packageTitle}>{packageTitle}</div>
+                    <div className={styles.packageSub}>{placeCount} place(s) · {formatCurrency(total, { maximumFractionDigits: 0 })}</div>
+                  </div>
+                  <button className={styles.smallBtn} onClick={() => {
+                    try {
+                      localStorage.removeItem("tripCart");
+                      window.dispatchEvent(new Event("tripCartUpdated"));
+                      setSavedTrips([]);
+                    } catch (e) { }
+                  }}>Clear Package</button>
                 </div>
-                <div className={styles.savedActions}>
-                  <button
-                    className={styles.smallBtn}
-                    onClick={() => {
-                      // remove this item from tripCart
-                      try {
-                        const raw = localStorage.getItem("tripCart");
-                        const arr = raw ? JSON.parse(raw) : [];
-                        const filtered = arr.filter((it, i) => i !== idx);
-                        localStorage.setItem("tripCart", JSON.stringify(filtered));
-                        window.dispatchEvent(new Event("tripCartUpdated"));
-                        setSavedTrips(filtered);
-                      } catch (e) {
-                        // ignore
-                      }
-                    }}
-                  >
-                    Remove
-                  </button>
-                  <button
-                    className={styles.smallBtnHotel}
-                    onClick={() => {
-                      try {
-                        navigate('/hotels', { state: { trip: item } });
-                      } catch (e) {
-                        // fallback: open hotels page
-                        window.location.href = '/hotels';
-                      }
-                    }}
-                  >
-                    Book Hotel
-                  </button>
-                  <button
-                    className={styles.smallBtnPrimary}
-                    onClick={() => {
-                      // Open modal to choose origin and generate fares for this saved trip
-                      setSelectedFromIndex(-1);
-                      setModalFromOptions([]);
-                      setSelectedSeats([]);
-                      setSavedFlowStep("chooseFrom");
-                      setModalSelectedDate("");
-                      setBookingModal({ open: true, item: { ...item, _saved: true }, idx });
-                    }}
-                  >
-                    Book Tickets
-                  </button>
+
+                <div className={styles.itineraryList}>
+                  {itinerary.map((it, idx) => {
+                    if (it._kind === 'travel') {
+                      return (
+                        <div key={`travel-${idx}`} className={styles.itineraryRowTravel}>
+                          <div className={styles.dayBadge}>Day {it.day}</div>
+                          <div className={styles.travelMeta}>
+                            <div className={styles.travelLabel}>Travel Day</div>
+                            <div className={styles.travelSub}>Move from {it.fromState || 'State A'} to {it.toState || 'State B'}; buffer day for transit</div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={`place-${idx}`} className={styles.itineraryRow}>
+                        <div className={styles.dayBadge}>Day {it.day}</div>
+                        <Thumbnail
+                          src={it.imageUrl || it.imagePath}
+                          title={it.title}
+                          className={styles.thumbSmall}
+                        />
+                        <div className={styles.savedMeta}>
+                          <div className={styles.savedTitle}>{it.title}</div>
+                          <div className={styles.savedSub}>{it.qty || 1} ticket(s)</div>
+                        </div>
+                        <div className={styles.priceTag}>{formatCurrency((it.price || 0) * (it.qty || 1), { maximumFractionDigits: 0 })}</div>
+                        <button className={styles.smallBtnGhost} onClick={() => removeItem(it.originalIndex)}>Remove</button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className={styles.packageBenefits}>
+                  <strong>Package includes:</strong>
+                  <ul>
+                    <li>Day-wise curated plan across {packageTitle}</li>
+                    <li>Assisted hotel matching near each stop</li>
+                    <li>Priority support and flexible rescheduling</li>
+                  </ul>
+                </div>
+
+                <div className={styles.packageActions}>
+                  <div className={styles.packageTotal}>Total Package: {formatCurrency(total, { maximumFractionDigits: 0 })}</div>
+                  <div className={styles.packageButtons}>
+                    <button
+                      className={styles.smallBtnHotel}
+                      onClick={() => {
+                        try {
+                          navigate('/hotels', { state: { package: { state: packageTitle, items: itinerary } } });
+                        } catch (e) {
+                          window.location.href = '/hotels';
+                        }
+                      }}
+                    >
+                      Book Package Hotels
+                    </button>
+                    <button
+                      className={styles.smallBtnPrimary}
+                      onClick={() => {
+                        // Start ticket booking flow for the entire package
+                        if (itinerary.length === 0) return;
+                        setSelectedFromIndex(-1);
+                        setModalFromOptions([]);
+                        setModalSelectedDate("");
+                        setSelectedSeats([]);
+                        setSavedFlowStep("chooseFrom");
+                        setBookingModal({ open: true, item: { ...itinerary[0], _saved: true, _isPackage: true, _packageItems: itinerary, _packageTotal: total, _packageState: packageTitle }, idx: 0 });
+                      }}
+                    >
+                      Book Package Tickets
+                    </button>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
+            );
+          } catch (err) {
+            console.error('Saved trips render failed', err);
+            return <p>{t('noSavedTrips')}</p>;
+          }
+        })() : (
           <p>{t('noSavedTrips')}</p>
         )}
       </section>
@@ -668,22 +787,28 @@ const MyBookingsPage = () => {
             {/* seat selection step for saved flow */}
             {savedFlowStep === 'selectSeats' && (
               <div>
-                <h2 className={styles.modalTitle}>Select Seats for {bookingModal.item.title}</h2>
+                <h2 className={styles.modalTitle}>Select Seats for {bookingModal.item._isPackage ? `${bookingModal.item._packageState} Package` : bookingModal.item.title}</h2>
                 <div className={styles.modalBody}>
                   <SeatSelector bookedSeats={bookingModal.item.bookedSeats || []} selectedSeats={selectedSeats} onSeatSelect={setSelectedSeats} />
                   <div className={styles.modalSummary}>
                     <p><strong>Selected Seats:</strong> {selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None'}</p>
-                    <p><strong>Total:</strong> {formatCurrency((bookingModal.item.price || 5000) * selectedSeats.length)}</p>
+                    {bookingModal.item._isPackage ? (
+                      <p><strong>Package Total:</strong> {formatCurrency(bookingModal.item._packageTotal)}</p>
+                    ) : (
+                      <p><strong>Total:</strong> {formatCurrency((bookingModal.item.price || 5000) * selectedSeats.length)}</p>
+                    )}
                     <div className={styles.modalActions}>
                       <button className={styles.smallBtn} onClick={() => { setBookingModal({ open: false, item: null, idx: -1 }); setSelectedSeats([]); setSavedFlowStep('chooseFrom'); }}>Cancel</button>
                       <button className={styles.smallBtnPrimary} onClick={() => {
                         if (selectedSeats.length === 0) { alert('Please select at least one seat.'); return; }
-                        const totalAmount = (bookingModal.item.price || 5000) * selectedSeats.length;
+                        const isPackage = bookingModal.item._isPackage;
+                        const totalAmount = isPackage ? bookingModal.item._packageTotal : ((bookingModal.item.price || 5000) * selectedSeats.length);
                         const tripObj = bookingModal.item.trip || { _id: bookingModal.item.id || null, source: bookingModal.item.source || bookingModal.item.title || 'Route', destination: bookingModal.item.destination || '' };
+                        const packageData = isPackage ? { _isPackage: true, _packageItems: bookingModal.item._packageItems, _packageState: bookingModal.item._packageState } : {};
                         setBookingModal({ open: false, item: null, idx: -1 });
                         setSelectedSeats([]);
                         setSavedFlowStep('chooseFrom');
-                        navigate('/checkout', { state: { trip: tripObj, selectedSeats, totalAmount, paymentType: 'upi', travelDate: bookingModal.item?.travelDate, fromLocation: bookingModal.item?.source } });
+                        navigate('/checkout', { state: { trip: tripObj, selectedSeats, totalAmount, paymentType: 'upi', travelDate: bookingModal.item?.travelDate, fromLocation: bookingModal.item?.source, ...packageData } });
                       }}>Proceed to Payment</button>
                     </div>
                   </div>
@@ -769,32 +894,13 @@ const MyBookingsPage = () => {
 
 
 const BookingCard = ({ booking, onView }) => {
-  const isUpcoming = booking.trip && new Date(booking.trip.date) >= new Date();
-
+  const info = booking && (booking.tripInfo || booking.trip || booking.tripSnapshot) || {};
+  const isUpcoming = info && info.date ? new Date(info.date) >= new Date() : true;
 
   const isSavedBooking = booking && booking._id && booking._id.toString().startsWith("saved-");
 
-  if (!booking.trip) {
-    return (
-      <div className={`${styles.card} ${styles.invalidCard}`}>
-        <div className={styles.cardHeader}>
-          <span>Booking ID: #{booking._id.slice(-6).toUpperCase()}</span>
-        </div>
-        <div className={styles.cardBody}>
-          <h3>Trip No Longer Available</h3>
-          <p>
-            This trip may have been cancelled or removed by the administrator.
-          </p>
-          <div className={styles.cardFooter}>
-            <button className={styles.viewBtn} onClick={() => onView && onView(booking)}>
-              View
-            </button>
-            <button className={styles.cancelBtn}>Cancel</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // If there is no trip info at all, hide this card (user asked not to show them)
+  if (!info || Object.keys(info).length === 0) return null;
 
   return (
     <div
@@ -802,20 +908,20 @@ const BookingCard = ({ booking, onView }) => {
         }`}
     >
       <div className={styles.cardHeader}>
-        <span>Booking ID: #{booking._id.toString().slice(-6).toUpperCase()}</span>
+        <span>Booking ID: #{(booking && booking._id ? booking._id.toString() : "UNKNOWN").slice(-6).toUpperCase()}</span>
         <span className={isSavedBooking ? styles.pastTag : (isUpcoming ? styles.upcomingTag : styles.pastTag)}>
           {isSavedBooking ? "COMPLETED" : (isUpcoming ? "Upcoming" : "Completed")}
         </span>
       </div>
       <div className={styles.cardBody}>
         <h3>
-          {booking.trip.source} to {booking.trip.destination}
+          {(info && info.source) || 'N/A'} to {(info && info.destination) || 'N/A'}
         </h3>
-        <p>Date: {new Date(booking.trip.date).toLocaleDateString()}</p>
+        <p>Date: {(info && info.date) ? new Date(info.date).toLocaleDateString() : (booking.travelDate ? new Date(booking.travelDate).toLocaleDateString() : 'N/A')}</p>
         <p>
-          Time: {booking.trip.time ? booking.trip.time : <Clock />}
+          Time: {(info && info.time) ? info.time : <Clock />}
         </p>
-        {!isSavedBooking && <p>Seats: {booking.seats.join(", ")}</p>}
+        {Array.isArray(booking.seats) && booking.seats.length > 0 && <p>Seats: {booking.seats.join(", ")}</p>}
         {isSavedBooking && booking.savedAt && (
           <p>Saved: {new Date(booking.savedAt).toLocaleString()}</p>
         )}

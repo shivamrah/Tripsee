@@ -7,6 +7,7 @@ import { LocaleContext } from "../../context/LocaleContext";
 import AddEditTripModal from "./AddEditTripModal";
 import TripBookingsModal from "./TripBookingModal";
 import EditBookingModal from "./EditBookingModal";
+import Modal from "../../components/common/Modal";
 import styles from "./AdminDashboardPage.module.css";
 
 const AdminDashboardPage = () => {
@@ -24,6 +25,10 @@ const AdminDashboardPage = () => {
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [isEditBookingOpen, setIsEditBookingOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
+
+  // Error state
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
 
   const { user } = useContext(AuthContext);
   const { t, locale, formatCurrency } = useContext(LocaleContext);
@@ -66,13 +71,21 @@ const AdminDashboardPage = () => {
   };
 
   const handleSaveTrip = async (tripData) => {
-    const formData = new FormData();
-    Object.keys(tripData).forEach((key) => {
-      formData.append(key, tripData[key]);
-    });
+    const payload = {
+      placeName: tripData.placeName,
+      destination: tripData.destination,
+      state: tripData.state,
+      description: tripData.description,
+      tripCost: tripData.tripCost,
+      date: tripData.date,
+      time: tripData.time,
+      totalSeats: tripData.totalSeats,
+      imageUrl: tripData.imageUrl,
+    };
+
     const config = {
       headers: {
-        "Content-Type": "multipart/form-data",
+        "Content-Type": "application/json",
         Authorization: `Bearer ${user.token}`,
       },
     };
@@ -80,18 +93,17 @@ const AdminDashboardPage = () => {
     try {
       setIsSaving(true);
       if (editingTrip) {
-
-        await API.put(`/trips/${editingTrip._id}`, tripData, {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
+        await API.put(`/trips/${editingTrip._id}`, payload, config);
       } else {
-        await API.post("/trips", formData, config);
+        await API.post("/trips", payload, config);
       }
       fetchData();
       handleCloseModal();
     } catch (error) {
       console.error("Failed to save trip", error);
-      alert(t('failedToSaveTrip'));
+      const errorMessage = error.response?.data?.message || error.message || t('failedToSaveTrip');
+      setErrorMessage(errorMessage);
+      setIsErrorModalOpen(true);
     } finally {
       setIsSaving(false);
     }
@@ -168,10 +180,11 @@ const AdminDashboardPage = () => {
         <table>
           <thead>
             <tr>
-              <th>{t('sourceLabel')}</th>
-              <th>{t('destinationLabel')}</th>
+              <th>{t('placeName') || 'Place Name'}</th>
+              <th>{t('destination') || 'Destination'}</th>
+              <th>{t('state') || 'State'}</th>
               <th>{t('dateLabel')}</th>
-              <th>{t('priceLabel')}</th>
+              <th>{t('tripCost') || 'Cost'}</th>
               <th>{t('seatsLabelShort')}</th>
               <th>{t('actionsLabel')}</th>
             </tr>
@@ -179,10 +192,11 @@ const AdminDashboardPage = () => {
           <tbody>
             {trips.map((trip) => (
               <tr key={trip._id}>
-                <td>{trip.source}</td>
+                <td>{trip.placeName}</td>
                 <td>{trip.destination}</td>
+                <td>{trip.state}</td>
                 <td>{new Date(trip.date).toLocaleDateString(locale === 'en' ? 'en-IN' : `${locale}-IN`)}</td>
-                <td>{formatCurrency(trip.price)}</td>
+                <td>{formatCurrency(trip.tripCost)}</td>
                 <td>
                   {trip.bookedSeats.length} / {trip.totalSeats}
                 </td>
@@ -236,10 +250,10 @@ const AdminDashboardPage = () => {
                 <td>{booking.user ? booking.user.name : "N/A"}</td>
                 <td>
                   {booking.tripInfo
-                    ? `${booking.tripInfo.source || booking.tripInfo.title || 'N/A'} to ${booking.tripInfo.destination || (booking.tripInfo.attractions && booking.tripInfo.attractions[0]?.name) || 'N/A'}`
-                    : (booking.trip ? `${booking.trip.source} to ${booking.trip.destination}` : "N/A")}
+                    ? `${booking.tripInfo.placeName || booking.tripInfo.title || 'N/A'} - ${booking.tripInfo.destination || (booking.tripInfo.attractions && booking.tripInfo.attractions[0]?.name) || 'N/A'}`
+                    : (booking.trip ? `${booking.trip.placeName} - ${booking.trip.destination}` : "N/A")}
                 </td>
-                <td>{booking.fromLocation || (booking.tripInfo && (booking.tripInfo.source || booking.tripInfo.title)) || 'N/A'}</td>
+                <td>{booking.fromLocation || (booking.tripInfo && (booking.tripInfo.placeName || booking.tripInfo.title)) || 'N/A'}</td>
                 <td>{(booking.tripInfo && (booking.tripInfo.destination || (booking.tripInfo.attractions && booking.tripInfo.attractions[0]?.name))) || (booking.trip && booking.trip.destination) || 'N/A'}</td>
                 <td>{booking.travelDate ? new Date(booking.travelDate).toLocaleDateString() : booking.tripInfo && booking.tripInfo.date ? new Date(booking.tripInfo.date).toLocaleDateString() : booking.trip ? new Date(booking.trip.date).toLocaleDateString() : 'N/A'}</td>
                 <td>{booking.seats.join(", ")}</td>
@@ -277,6 +291,29 @@ const AdminDashboardPage = () => {
         booking={editingBooking}
         onSaved={() => fetchData()}
       />
+
+      <Modal
+        isOpen={isErrorModalOpen}
+        onClose={() => setIsErrorModalOpen(false)}
+      >
+        <div style={{ padding: "20px" }}>
+          <h3 style={{ color: "#d32f2f", marginBottom: "10px" }}>{t('failedToSaveTrip')}</h3>
+          <p style={{ marginBottom: "20px" }}>{errorMessage}</p>
+          <button
+            onClick={() => setIsErrorModalOpen(false)}
+            style={{
+              backgroundColor: "#1976d2",
+              color: "white",
+              padding: "10px 20px",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            {t('close') || 'Close'}
+          </button>
+        </div>
+      </Modal>
 
     </div>
   );

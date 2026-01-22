@@ -1,5 +1,4 @@
 
-
 import React, { useContext, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import API from "../api";
@@ -7,6 +6,7 @@ import { AuthContext } from "../context/AuthContext";
 import { LocaleContext } from "../context/LocaleContext";
 import styles from "./CheckoutPage.module.css";
 import Modal from "../components/common/Modal";
+import { getSeatPrice } from "../components/trips/SeatSelector";
 
 const CheckoutPage = () => {
   const { state } = useLocation();
@@ -30,7 +30,12 @@ const CheckoutPage = () => {
   // support both `selectedFrom` (older) and `fromLocation` (newer) and travelDate passed from previous steps
   const selectedFrom = (state && (state.selectedFrom || state.fromLocation)) || "";
   const travelDateFromState = (state && (state.travelDate || state.travelDate)) || null;
-  const routeFrom = selectedFrom || (trip && trip.source) || "";
+  const routeFrom = selectedFrom || (trip && trip.placeName) || "";
+
+  // Package booking support
+  const isPackageBooking = state && state._isPackage;
+  const packageItems = state && state._packageItems;
+  const packageState = state && state._packageState;
 
   // UPI fields
   const [upiName, setUpiName] = useState("");
@@ -65,6 +70,9 @@ const CheckoutPage = () => {
           totalAmount: totalAmount,
           travelDate: travelDateFromState || trip.date,
           fromLocation: selectedFrom,
+          customerName: fullName,
+          customerEmail: email,
+          customerPhone: phone,
           ...(trip && trip._isExample ? { tripSnapshot: trip } : {}),
         },
       );
@@ -128,6 +136,12 @@ const CheckoutPage = () => {
             paymentInfo: { method: "UPI", upiName, upiId },
             travelDate: travelDateFromState || trip.date,
             fromLocation: selectedFrom,
+            customerName: fullName,
+            customerEmail: email,
+            customerPhone: phone,
+            customerName: fullName,
+            customerEmail: email,
+            customerPhone: phone,
             ...(trip && trip._isExample ? { tripSnapshot: trip } : {}),
           }
         );
@@ -311,22 +325,57 @@ const CheckoutPage = () => {
           <h3>Booking Summary</h3>
           <div className={styles.summaryCard}>
             <div className={styles.summaryImage}>✈️</div>
-            <p>
-              <strong>Route:</strong> {routeFrom} to {trip?.destination || ""}
-            </p>
-            <p>
-              <strong>{t('dateLabel')}: </strong> {new Date(travelDateFromState || trip.date).toLocaleDateString(locale === 'en' ? 'en-IN' : `${locale}-IN`)}
-            </p>
-            <p>
-              <strong>Time:</strong> {trip.time}
-            </p>
-            <p>
-              <strong>Seats:</strong> {selectedSeats.join(", ")}
-            </p>
+            {isPackageBooking ? (
+              <>
+                <p>
+                  <strong>Package:</strong> {packageState}
+                </p>
+                <p>
+                  <strong>From:</strong> {routeFrom}
+                </p>
+                <p>
+                  <strong>Included Places:</strong>
+                </p>
+                <ul style={{ marginLeft: 20, color: '#475569' }}>
+                  {packageItems && packageItems.map((item, idx) => (
+                    <li key={idx}>Day {item.day || idx + 1}: {item.title}</li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <>
+                <p>
+                  <strong>Route:</strong> {routeFrom} to {trip?.destination || ""}
+                </p>
+                <p>
+                  <strong>{t('dateLabel')}: </strong> {new Date(travelDateFromState || trip.date).toLocaleDateString(locale === 'en' ? 'en-IN' : `${locale}-IN`)}
+                </p>
+                <p>
+                  <strong>Time:</strong> {trip.time}
+                </p>
+                <p>
+                  <strong>Seats:</strong> {selectedSeats.join(", ")}
+                </p>
+                <p>
+                  <strong>Number of Tickets:</strong> {selectedSeats.length}
+                </p>
+              </>
+            )}
             <hr className={styles.divider} />
-            <p className={styles.totalFare}>
-              <strong>Total Fare:</strong>{" "}
-              <span>{formatCurrency(totalAmount)}</span>
+            {selectedSeats && selectedSeats.length > 0 && (
+              <>
+                <div style={{ padding: '0.75rem', marginBottom: '0.75rem', backgroundColor: '#f9fafb', borderRadius: '6px' }}>
+                  <p style={{ margin: '0.5rem 0', color: '#374151', fontWeight: '600' }}>Seat Prices:</p>
+                  {selectedSeats.map((seatId) => (
+                    <p key={seatId} style={{ margin: '0.25rem 0 0.25rem 1rem', color: '#4b5563', fontSize: '0.9rem' }}>
+                      {seatId}: {formatCurrency(getSeatPrice(seatId))}
+                    </p>
+                  ))}
+                </div>
+              </>
+            )}
+            <p className={styles.totalFare} style={{ backgroundColor: '#0ea5e9', color: '#fff', padding: '1rem', borderRadius: '8px', textAlign: 'center', fontSize: '1.25rem', fontWeight: 'bold' }}>
+              <strong>Package Total:</strong> {formatCurrency(totalAmount)}
             </p>
           </div>
           {error && <p className={styles.error}>{error}</p>}
@@ -353,7 +402,7 @@ const CheckoutPage = () => {
         isOpen={isSuccessModalOpen}
         onClose={() => {
           setIsSuccessModalOpen(false);
-          if (createdBooking) navigate("/confirmation", { state: { bookingDetails: createdBooking, trip } });
+          if (createdBooking) navigate("/confirmation", { state: { bookingDetails: createdBooking, trip: { ...trip, _packageItems: packageItems, _packageState: packageState, _isPackage: isPackageBooking } } });
         }}
       >
         <div style={{ padding: 20, textAlign: "center" }}>
@@ -362,7 +411,7 @@ const CheckoutPage = () => {
           <button
             onClick={() => {
               setIsSuccessModalOpen(false);
-              if (createdBooking) navigate("/confirmation", { state: { bookingDetails: createdBooking, trip } });
+              if (createdBooking) navigate("/confirmation", { state: { bookingDetails: createdBooking, trip: { ...trip, _packageItems: packageItems, _packageState: packageState, _isPackage: isPackageBooking } } });
             }}
             style={{ marginTop: 12 }}
           >

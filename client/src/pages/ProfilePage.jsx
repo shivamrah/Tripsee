@@ -157,7 +157,7 @@ const BookingCard = ({ booking, isUpcoming }) => {
       </div>
       <div className="card-body">
         <h4>
-          {booking.trip.source} → {booking.trip.destination}
+          {booking.trip.placeName} - {booking.trip.destination}
         </h4>
         <p>Date: {new Date(booking.trip.date).toLocaleDateString()}</p>
         <p>Time: {booking.trip.time}</p>

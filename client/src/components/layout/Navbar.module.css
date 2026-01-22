@@ -105,6 +105,35 @@
     gap: 2rem;
 }
 
+/* hamburger button (hidden on wide screens) */
+.hamburger{
+    display:none;
+    background:transparent;
+    border:none;
+    width:44px;
+    height:44px;
+    align-items:center;
+    justify-content:center;
+    border-radius:8px;
+    cursor:pointer;
+}
+.hamburgerBox{display:block;width:22px;height:2px;background:#374151;position:relative}
+.hamburgerBox::before,.hamburgerBox::after{content:'';position:absolute;left:0;right:0;height:2px;background:#374151;display:block}
+.hamburgerBox::before{top:-7px}
+.hamburgerBox::after{top:7px}
+
+/* mobile menu open state */
+.navLinks.open{
+    display:block;
+}
+
+@media (max-width: 768px){
+    .hamburger{display:flex}
+    .navLinks{display:none;position:absolute;top:64px;right:12px;left:12px;background:white;border-radius:12px;padding:12px;box-shadow:0 12px 36px rgba(0,0,0,0.12);z-index:120}
+    .navLinks a, .navLinks button, .navLinks select{display:block;width:100%;text-align:left;padding:10px 12px;border-radius:8px;margin-bottom:6px}
+    .navLinks .logoutButton{width:100%}
+}
+
 .navLink,
 .navLinkButton {
     font-size: 1rem;

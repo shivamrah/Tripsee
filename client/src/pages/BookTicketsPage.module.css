@@ -39,10 +39,24 @@ h2 {
 }
 
 .input {
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    font-size: 14px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    background-color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    cursor: pointer;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
+}
+
+.input:hover {
+    border-color: #d1d5db;
 }
 
 .modalCard {
@@ -76,9 +90,23 @@ h2 {
 
 .searchInput {
     width: 100%;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid #e6edf2;
+    padding: 12px 16px 12px 42px;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    background-color: #ffffff;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>');
+    background-repeat: no-repeat;
+    background-position: 12px center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.searchInput:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%233b82f6" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>');
 }
 
 .cityList {
@@ -118,20 +146,69 @@ h2 {
 }
 
 .cancel {
-    background: #fff;
+    background: #ffffff;
     color: #111827;
-    padding: 10px 16px;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.cancel:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.cancel:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .proceed {
-    background: linear-gradient(90deg, #06b6d4, #3b82f6);
+    background: linear-gradient(135deg, #06b6d4, #3b82f6);
     color: white;
-    padding: 12px 18px;
+    padding: 14px 24px;
     border-radius: 12px;
     border: none;
-    box-shadow: 0 8px 20px rgba(3, 102, 214, 0.14);
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(6, 182, 212, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+.proceed::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.proceed:hover::before {
+    left: 100%;
+}
+
+.proceed:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(6, 182, 212, 0.35);
+    background: linear-gradient(135deg, #0891b2, #2563eb);
+}
+
+.proceed:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
 }
 
 .error {
@@ -155,21 +232,7 @@ h2 {
     margin-top: 18px;
 }
 
-.cancel {
-    background: #fff;
-    color: #111827;
-    padding: 10px 16px;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-}
-
-.proceed {
-    background: linear-gradient(90deg, #06b6d4, #3b82f6);
-    color: white;
-    padding: 10px 18px;
-    border-radius: 10px;
-    border: none;
-}
+/* Duplicate styles removed - main styles above in actionsArea section */
 
 .error {
     margin-top: 10px;
@@ -240,4 +303,117 @@ h2 {
         width: 100%;
         display: block;
     }
+}
+
+/* Day-wise Booking Styles */
+.modeToggle {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 1rem;
+}
+
+.modeBtn {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.modeBtn:hover {
+    color: #06b6d4;
+}
+
+.modeBtn.active {
+    color: #06b6d4;
+    border-bottom-color: #06b6d4;
+}
+
+.dayWiseContainer {
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.dayTitle {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 1rem 0 0.8rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dayTitle:first-child {
+    margin-top: 0;
+}
+
+.placesGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.placeOption {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.placeOption:hover {
+    border-color: #06b6d4;
+    background: #f0f9ff;
+}
+
+.placeOption input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #06b6d4;
+}
+
+.placeOption input[type="checkbox"]:checked+.placeName {
+    color: #06b6d4;
+    font-weight: 600;
+}
+
+.placeName {
+    flex: 1;
+    font-weight: 500;
+    color: #1f2937;
+    transition: all 0.2s ease;
+}
+
+.placePrice {
+    color: #06b6d4;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.selectionSummary {
+    background: #f0f9ff;
+    border: 2px solid #06b6d4;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.selectionSummary p {
+    margin: 0.5rem 0;
+    color: #1f2937;
+    font-weight: 600;
 }

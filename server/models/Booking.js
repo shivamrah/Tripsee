@@ -32,6 +32,15 @@ const bookingSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  customerName: {
+    type: String,
+  },
+  customerEmail: {
+    type: String,
+  },
+  customerPhone: {
+    type: String,
+  },
 });
 
 // Ensure at least one of trip or tripSnapshot is present

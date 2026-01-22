@@ -22,6 +22,16 @@ const Navbar = () => {
     }
   };
 
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth > 768 && mobileOpen) setMobileOpen(false);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [mobileOpen]);
+
   useEffect(() => {
     // initialize
     setCartCount(getCartCount());
@@ -40,14 +50,19 @@ const Navbar = () => {
     };
   }, []);
 
+  const closeMobileMenu = () => {
+    setMobileOpen(false);
+  };
+
   const handleLogout = () => {
+    closeMobileMenu();
     logout();
     navigate("/login");
   };
 
 
   const handleAdminClick = () => {
-
+    closeMobileMenu();
     navigate("/login", { state: { defaultRole: "admin" } });
   };
 
@@ -57,8 +72,17 @@ const Navbar = () => {
         <Link to="/" className={styles.brand}>
           TripSee
         </Link>
-        <div className={styles.navLinks}>
-          <Link to="/" className={styles.navLink}>
+        <button
+          className={styles.hamburger}
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileOpen}
+          onClick={() => setMobileOpen((s) => !s)}
+        >
+          <span className={styles.hamburgerBox} />
+        </button>
+
+        <div className={`${styles.navLinks} ${mobileOpen ? styles.open : ''}`}>
+          <Link to="/" className={styles.navLink} onClick={closeMobileMenu}>
             {t('home')}
           </Link>
 
@@ -67,7 +91,7 @@ const Navbar = () => {
 
           {user && user.role === "admin" ? (
 
-            <Link to="/admin" className={styles.navLink}>
+            <Link to="/admin" className={styles.navLink} onClick={closeMobileMenu}>
               {t('admin')}
             </Link>
           ) : (
@@ -80,7 +104,7 @@ const Navbar = () => {
           {user ? (
             <>
 
-              <Link to="/my-bookings" className={styles.navLink} title={t('myBookings')}>
+              <Link to="/my-bookings" className={styles.navLink} title={t('myBookings')} onClick={closeMobileMenu}>
                 <span className={styles.myBookingsContent}>
                   {cartCount > 0 && (
                     <svg
@@ -99,13 +123,16 @@ const Navbar = () => {
                   {cartCount > 0 && <span className={styles.cartBadge}>{cartCount}</span>}
                 </span>
               </Link>
-              <Link to="/profile" className={styles.navLink}>
+              <Link to="/profile" className={styles.navLink} onClick={closeMobileMenu}>
                 {t('profile')}
               </Link>
               {/* Language selector next to logout */}
               <select
                 value={locale}
-                onChange={(e) => setLang(e.target.value)}
+                onChange={(e) => {
+                  setLang(e.target.value);
+                  closeMobileMenu();
+                }}
                 className={styles.langSelect}
                 aria-label="Choose language"
               >
@@ -120,10 +147,10 @@ const Navbar = () => {
           ) : (
             <>
 
-              <Link to="/login" className={styles.navLink}>
+              <Link to="/login" className={styles.navLink} onClick={closeMobileMenu}>
                 {t('login')}
               </Link>
-              <Link to="/signup" className={styles.navLink}>
+              <Link to="/signup" className={styles.navLink} onClick={closeMobileMenu}>
                 {t('signup')}
               </Link>
             </>

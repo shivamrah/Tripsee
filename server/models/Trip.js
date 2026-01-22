@@ -1,11 +1,38 @@
 import mongoose from "mongoose";
 
 const tripSchema = new mongoose.Schema({
+  // Legacy fields (kept for backward compatibility)
+  placeName: {
+    type: String,
+  },
+  state: {
+    type: String,
+  },
+  description: {
+    type: String,
+  },
+  tripCost: {
+    type: Number,
+  },
+  
+  // New fields (primary)
   source: {
+    type: String,
+  },
+  destination: {
     type: String,
     required: true,
   },
-  destination: {
+  price: {
+    type: Number,
+  },
+  stateDescription: {
+    type: String,
+    default: "",
+  },
+  
+  // Common fields
+  imageUrl: {
     type: String,
     required: true,
   },
@@ -17,10 +44,6 @@ const tripSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  price: {
-    type: Number,
-    required: true,
-  },
   totalSeats: {
     type: Number,
     required: true,
@@ -29,9 +52,19 @@ const tripSchema = new mongoose.Schema({
     type: [String],
     default: [],
   },
-  imageUrl: {
-    type: String,
-    required: true,
+  attractions: {
+    type: [
+      {
+        name: String,
+        price: Number,
+        imagePath: String,
+      },
+    ],
+    default: [],
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
   },
 });
 

@@ -5,7 +5,7 @@ import Trip from "../models/Trip.js";
 
 
 export const createBooking = async (req, res) => {
-  const { tripId, seats, totalAmount, travelDate, fromLocation, tripSnapshot: tripSnapshotParam } = req.body;
+  const { tripId, seats, totalAmount, travelDate, fromLocation, tripSnapshot: tripSnapshotParam, customerName, customerEmail, customerPhone } = req.body;
   let tripSnapshot = tripSnapshotParam;
   const userId = req.user && req.user._id;
 
@@ -83,6 +83,9 @@ export const createBooking = async (req, res) => {
       totalAmount: typeof totalAmount === 'number' ? totalAmount : Number(totalAmount) || 0,
       travelDate: travelDate ? new Date(travelDate) : undefined,
       fromLocation: fromLocation || undefined,
+      customerName: customerName || undefined,
+      customerEmail: customerEmail || undefined,
+      customerPhone: customerPhone || undefined,
     };
 
     if (trip) {

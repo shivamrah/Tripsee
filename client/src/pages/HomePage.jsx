@@ -100,54 +100,39 @@ const HomePage = () => {
       </header>
 
       <main className={styles.mainContent}>
-        <h2 className={styles.sectionTitle}>{t('search')}</h2>
-
-        {loading && <p>{t('loading')} trips...</p>}
-        {error && <p className={styles.error}>{error}</p>}
-        {!loading && !error && (
-          <div className={styles.tripGrid}>
-            {trips.length > 0 && !filters.source ? (
-              trips.map((trip) => <TripCard key={trip._id} trip={trip} />)
-            ) : filters.source ? (
-              // When a state is searched, show a single state card with a Book Trips button
-              (() => {
-                const meta = STATE_INFO[filters.source];
-                if (!meta) return <p>No data for "{filters.source}".</p>;
-                return (
-                  <div className={styles.attractionGrid}>
-                    <div className={styles.attractionCard}>
-                      <img
-                        src={meta.imagePath}
-                        alt={filters.source}
-                        className={styles.attractionImage}
-                      />
-                      <div className={styles.attractionBody}>
-                        <div>
-                          <h3>{filters.source}</h3>
-                          <p style={{ marginTop: 8 }}>{meta.description}</p>
-                        </div>
-                        <div className={styles.attractionActions}>
-                          <button
-                            className={styles.bookIconButton}
-                            onClick={() =>
-                              window.location.assign(`/places/${encodeURIComponent(
-                                filters.source
-                              )}`)
-                            }
-                          >
-                            📍 Book Trips
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+        {/* Display filtered state cards based on search */}
+        <div className={styles.statesSection}>
+          <h2 className={styles.statesSectionTitle}>{t('chooseYourDestination') || 'Explore Our States'}</h2>
+          <div className={styles.statesGrid}>
+            {Object.entries(STATE_INFO)
+              .filter(([stateName]) => {
+                // Filter states based on search query
+                if (!filters.source) return true;
+                return stateName.toLowerCase().includes(filters.source.toLowerCase());
+              })
+              .map(([stateName, meta]) => (
+                <div key={stateName} className={styles.stateCard}>
+                  <img
+                    src={meta.imagePath}
+                    alt={stateName}
+                    className={styles.stateCardImage}
+                  />
+                  <div className={styles.stateCardBody}>
+                    <h3>{stateName}</h3>
+                    <p>{meta.description}</p>
+                    <button
+                      className={styles.stateCardButton}
+                      onClick={() =>
+                        window.location.assign(`/places/${encodeURIComponent(stateName)}`)
+                      }
+                    >
+                      Explore
+                    </button>
                   </div>
-                );
-              })()
-            ) : (
-              <p>Search for your destination</p>
-            )}
+                </div>
+              ))}
           </div>
-        )}
+        </div>
       </main>
     </div>
   );

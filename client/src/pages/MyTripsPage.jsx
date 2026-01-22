@@ -19,7 +19,23 @@ const MyTripsPage = () => {
     useEffect(() => {
         try {
             const raw = localStorage.getItem(CART_KEY);
-            if (raw) setItems(JSON.parse(raw));
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                // normalize saved items: ensure imageUrl exists and packageState/day defaults exist
+                const normalized = parsed.map((it, idx) => {
+                    const primary = getPrimaryFromTitle(it.title || "");
+                    const base = { packageState: it.packageState || primary || "", day: it.day || idx + 1 };
+                    if (it.imageUrl || it.imagePath) return { ...it, ...base };
+                    const meta = STATE_INFO[primary];
+                    if (meta && meta.imagePath) return { ...it, imageUrl: meta.imagePath, ...base };
+                    // fallback to unsplash search
+                    const fallbackQuery = encodeURIComponent(it.title || primary || "india");
+                    return { ...it, imageUrl: `https://source.unsplash.com/160x120/?${fallbackQuery}`, ...base };
+                });
+                setItems(normalized);
+                // persist normalized entries so subsequent loads are immediate
+                localStorage.setItem(CART_KEY, JSON.stringify(normalized));
+            }
         } catch (e) {
             setItems([]);
         }
@@ -39,6 +55,14 @@ const MyTripsPage = () => {
 
     const removeItem = (id) => {
         const next = items.filter((it) => it.id !== id);
+        // re-normalize day order after removal
+        const renumbered = next.map((it, idx) => ({ ...it, day: idx + 1 }));
+        save(renumbered);
+    };
+
+    const updateDay = (id, day) => {
+        const sanitized = Math.max(1, Math.floor(day || 1));
+        const next = items.map((it) => (it.id === id ? { ...it, day: sanitized } : it));
         save(next);
     };
 
@@ -58,6 +82,10 @@ const MyTripsPage = () => {
     };
 
     const getThumbnail = (it) => {
+        // If the saved item already contains an explicit image URL, prefer it
+        if (it && (it.imageUrl || it.imagePath)) {
+            return it.imageUrl || it.imagePath;
+        }
         // try to derive a state or destination keyword for an image
         const primary = getPrimaryFromTitle(it.title || "");
         const meta = STATE_INFO[primary];
@@ -71,24 +99,35 @@ const MyTripsPage = () => {
     const handleBook = async () => {
         if (!user) return navigate("/login");
         if (items.length === 0) return;
+
+        // Build a day-wise itinerary snapshot for potential use
+        const itinerary = [...items]
+            .sort((a, b) => (a.day || 0) - (b.day || 0))
+            .map((it, idx) => ({
+                day: it.day || idx + 1,
+                title: it.title,
+                tripId: it.id,
+                price: it.price || 0,
+                qty: it.qty || 1,
+            }));
+
         setLoading(true);
         try {
-            // For simplicity, create one booking per cart item using seats=[], server will accept it as a mock booking.
-            for (const it of items) {
-                // If the item represents a client-side example trip (id starts with "example-"), send a lightweight tripSnapshot
-                const isExample = typeof it.id === 'string' && it.id.startsWith('example-');
+            // Book one record per item (previous behavior), leaving room for seat selection later.
+            for (const item of items) {
+                const isExample = typeof item.id === 'string' && item.id.startsWith('example-');
                 let tripSnapshot = undefined;
                 if (isExample) {
-                    const parts = (it.title || '').split(/→|—|-/).map(p => p.trim()).filter(Boolean);
+                    const parts = (item.title || '').split(/→|—|-/).map(p => p.trim()).filter(Boolean);
                     const source = parts[0] || '';
                     const destination = parts[1] || '';
                     tripSnapshot = {
-                        _id: it.id,
+                        _id: item.id,
                         source,
                         destination,
                         date: new Date().toISOString(),
                         time: '',
-                        price: it.price || 0,
+                        price: item.price || 0,
                         totalSeats: 0,
                         bookedSeats: [],
                         imageUrl: ''
@@ -98,17 +137,18 @@ const MyTripsPage = () => {
                 await API.post(
                     "/bookings",
                     {
-                        tripId: it.id,
-                        seats: [],
-                        totalAmount: (it.price || 0) * (it.qty || 1),
+                        tripId: item.id,
+                        // Use a placeholder seat so the backend seat validator passes; real seat selection can follow in checkout.
+                        seats: ["PKG-" + (item.day || 1)],
+                        totalAmount: (item.price || 0) * (item.qty || 1),
+                        itinerary,
                         ...(tripSnapshot ? { tripSnapshot } : {}),
                     },
                     { headers: { Authorization: `Bearer ${user.token}` } }
                 );
             }
-            // Clear cart and navigate to My Bookings
-            localStorage.removeItem(CART_KEY);
-            setItems([]);
+
+            // Keep cart intact so user can manage remaining items later.
             navigate("/my-bookings");
         } catch (err) {
             console.error(err);
@@ -120,15 +160,17 @@ const MyTripsPage = () => {
 
     return (
         <div className={styles.container}>
-            <h1>{t('myTripsTitle')}</h1>
+            <h1>State Tour Package</h1>
             {items.length === 0 ? (
-                <p>{t('myTripsTitle')} list is empty. Add trips from the homepage or trip details.</p>
+                <p>Package is empty. Add trips from the homepage or destination details.</p>
             ) : (
                 <div>
                     <table className={styles.cartTable}>
                         <thead className={styles.cartThead}>
                             <tr>
                                 <th>Trip</th>
+                                <th>State</th>
+                                <th>Day</th>
                                 <th>Price</th>
                                 <th>Qty</th>
                                 <th>Subtotal</th>
@@ -144,6 +186,16 @@ const MyTripsPage = () => {
                                             <div style={{ fontWeight: 700 }}>{it.title}</div>
                                             <div className={styles.titleSmall}>{getSecondaryFromTitle(it.title)}</div>
                                         </div>
+                                    </td>
+                                    <td className={styles.tripCell}>{it.packageState || getPrimaryFromTitle(it.title)}</td>
+                                    <td className={styles.tripCell}>
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            value={it.day || 1}
+                                            onChange={(e) => updateDay(it.id, Number(e.target.value))}
+                                            className={styles.qtyInput}
+                                        />
                                     </td>
                                     <td className={styles.tripCell}>${(it.price || 0).toFixed(2)}</td>
                                     <td className={styles.tripCell}>
@@ -168,7 +220,7 @@ const MyTripsPage = () => {
                         <div className={styles.totalText}>{t('total')}: ${total.toFixed(2)}</div>
                         <div>
                             <button onClick={handleBook} disabled={loading} className={styles.bookBtn}>
-                                {loading ? t('loading') : t('bookTickets')}
+                                {loading ? t('loading') : 'Book Package'}
                             </button>
                         </div>
                     </div>

@@ -1,8 +1,13 @@
 
 
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Fail early with a clear message when critical env vars are missing.
 const requiredEnvs = ["MONGO_URI", "JWT_SECRET"];
@@ -38,6 +43,9 @@ const start = async () => {
   // Middleware
   app.use(cors());
   app.use(express.json());
+
+  // Serve uploaded files statically
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
   // Use all routes
   app.use('/api/auth', authRoutes);

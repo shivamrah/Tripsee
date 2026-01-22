@@ -1,0 +1,47 @@
+/* Global responsive utilities for TripSee */
+:root{
+  --container-max:1200px;
+  --pad-lg:24px;
+  --pad-sm:12px;
+}
+
+html,body,#root{height:100%;}
+body{margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;line-height:1.4;color:#111827;background:#fff}
+
+/* make images scale down naturally */
+img{max-width:100%;height:auto;display:block}
+
+/* container padding responsive */
+.pageContainer, .container{padding:var(--pad-lg);max-width:var(--container-max);margin:0 auto}
+@media (max-width:640px){
+  .pageContainer, .container{padding:var(--pad-sm)}
+}
+
+/* responsive grids (cards, attractions, bookings) */
+.attractionsGrid, .bookingsGrid, .grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px}
+
+/* tables: allow horizontal scroll on small screens */
+@media (max-width:800px){
+  .cartTable{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%}
+  .cartTable td,.cartTable th{white-space:nowrap}
+}
+
+/* thumbnails: parent classes (.thumb, .thumbSmall) should control visual size
+   but ensure they can shrink on small screens */
+.thumb, .thumbSmall, .thumb-placeholder{max-width:100%;height:auto}
+
+/* make forms and buttons more tappable on mobile */
+button, input[type="text"], input[type="number"], input[type="date"], select, textarea{
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent
+}
+
+/* responsive typography */
+@media (max-width:1024px){
+  h1{font-size:1.5rem}
+}
+
+/* small screens: stack table rows visually for readability when desired */
+@media (max-width:480px){
+  .cartRow{display:flex;flex-direction:row;align-items:center;gap:8px}
+  .tripCell{padding:8px 6px}
+}

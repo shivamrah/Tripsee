@@ -53,7 +53,10 @@ const Thumbnail = ({ src, title, className = "" }) => {
 
     if (failedAll) {
         return (
-            <div className={`thumb-placeholder ${className}`.trim()} style={{ width: 80, height: 60, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'linear-gradient(135deg,#eef2ff,#f8fafc)' }}>
+            <div
+                className={`thumb-placeholder ${className}`.trim()}
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'linear-gradient(135deg,#eef2ff,#f8fafc)' }}
+            >
                 {initials}
             </div>
         );
@@ -61,16 +64,16 @@ const Thumbnail = ({ src, title, className = "" }) => {
 
     return (
         <img
-            src={candidates[idx]}
-            alt={title}
-            className={className}
-            onError={() => {
-                if (idx + 1 < candidates.length) setIdx((i) => i + 1);
-                else setFailedAll(true);
-            }}
-            onLoad={() => { /* loaded successfully */ }}
-            style={{ width: 80, height: 60, objectFit: 'cover', borderRadius: 8 }}
-        />
+                src={candidates[idx]}
+                alt={title}
+                className={className}
+                onError={() => {
+                    if (idx + 1 < candidates.length) setIdx((i) => i + 1);
+                    else setFailedAll(true);
+                }}
+                onLoad={() => { /* loaded successfully */ }}
+                style={{ height: 'auto', maxWidth: '100%', objectFit: 'cover', borderRadius: 8, display: 'block' }}
+            />
     );
 };
 

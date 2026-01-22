@@ -1,0 +1,12 @@
+{
+  "name": "tripsee-main",
+  "version": "1.0.0",
+  "description": "This is a full-stack web application built with the MERN (MongoDB, Express.js, React, Node.js) stack. It is a comprehensive trip booking. The application allows users to search for, book, and manage trips, while providing a powerful dashboard for administrators to manage the platform's offerings.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
